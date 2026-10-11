@@ -177,6 +177,16 @@ def load_posts():
         h["dt"] = dt.datetime.fromisoformat(h["date"])
         h["words"] = len(text_of(h["body"]).split())
         h["excerpt"] = excerpt(h["body"])
+        en = os.path.join(ROOT, "content", "posts-en", os.path.basename(f))
+        if os.path.exists(en):
+            eraw = open(en, encoding="utf-8").read()
+            em = re.match(r"\s*<!--\s*(\{.*?\})\s*-->\s*", eraw, re.S)
+            e = json.loads(em.group(1))
+            e["body"] = eraw[em.end():]
+            e["url"] = "/en" + h["url"]
+            e["words"] = len(text_of(e["body"]).split())
+            e["excerpt"] = excerpt(e["body"])
+            h["en"] = e
         posts.append(h)
     posts.sort(key=lambda p: p["dt"])
     return posts
@@ -283,8 +293,10 @@ def act_totals(acts):
     return (sum(a["dist"] for a in acts) / 1000, sum(a["elev"] for a in acts), sum(a["time"] for a in acts))
 
 
-def fkm(km):
-    return f"{km:,.0f}".replace(",", "\u202f") if km >= 10 else f"{km:.1f}".replace(".", ",")
+def fkm(km, lang="fr"):
+    if km >= 10:
+        return f"{km:,.0f}".replace(",", "\u202f" if lang == "fr" else ",")
+    return f"{km:.1f}".replace(".", "," if lang == "fr" else ".")
 
 
 def fdur(sec):
@@ -326,7 +338,7 @@ def act_card(a, color, lang="fr", tag="div"):
     t = T[lang]
     d = dt.datetime.fromisoformat(a["date"])
     kind = "velo" if "Ride" in a["type"] else "pied"
-    bits = [f"<b>{fkm(a['dist'] / 1000)}</b> km"]
+    bits = [f"<b>{fkm(a['dist'] / 1000, lang)}</b> km"]
     if a["elev"] >= 15:
         bits.append(f"<b>{a['elev']:,}</b> m D+".replace(",", "\u202f"))
     if a["time"]:
@@ -348,7 +360,7 @@ def tracks_section(p, trip, lang="fr"):
     kind = act_kind(acts, lang)
     embedded = set(re.findall(r'data-activity="(\d+)"', p["body"]))
     listed = [a for a in acts if a["id"] not in embedded]
-    stats = [f"<span><b>{fkm(km)}</b> km</span>"]
+    stats = [f"<span><b>{fkm(km, lang)}</b> km</span>"]
     if elev >= 30:
         stats.append(f"<span><b>{elev:,}</b> m D+</span>".replace(",", "\u202f"))
     if sec:
@@ -536,26 +548,42 @@ def trip_card(t, lang):
 <p>{esc(t['lead'][lang])}</p><span class="label">{n} {T[lang]['stories'] if n > 1 else T[lang]['story']}</span></div></a>"""
 
 
+def V(p, lang):
+    """The post as shown in a language: its translation when there is one, else the French original."""
+    if lang == "en" and p.get("en"):
+        return p["en"]
+    return p
+
+
+def fr_note(p, lang):
+    return ' <span class="lang-note" lang="en">FR</span>' if lang == "en" and not p.get("en") else ""
+
+
+def post_lang(p, lang):
+    return "en" if lang == "en" and p.get("en") else "fr"
+
+
 def story_card(p, lang="fr"):
     t = p.get("trip")
     lbl = fdate(p["dt"], lang)
     if t:
         lbl = f"{T[lang]['step']} {p['step']} · {lbl}"
-    note = ' <span class="lang-note" lang="en">FR</span>' if lang == "en" else ""
-    return f"""<a class="story" href="{p['url']}" lang="fr">
-{img(p.get('cover'), p['title'], width=900)}
-<span class="label">{post_flags(p, 13)} {esc(lbl)}</span><h3>{esc(p['title'])}{note}</h3><p>{esc(p['excerpt'])}</p></a>"""
+    v = V(p, lang)
+    return f"""<a class="story" href="{v['url']}" lang="{post_lang(p, lang)}">
+{img(p.get('cover'), v['title'], width=900)}
+<span class="label">{post_flags(p, 13)} {esc(lbl)}</span><h3>{esc(v['title'])}{fr_note(p, lang)}</h3><p>{esc(v['excerpt'])}</p></a>"""
 
 
 def latest_section(trip, latest, lang):
     t = T[lang]
     tiles = ""
     for i, p in enumerate(latest):
-        note = ' <span class="lang-note">FR</span>' if lang == "en" else ""
-        tiles += f"""<a class="lt lt{i}" href="{p['url']}" lang="fr">{img(p.get('cover'), p['title'], cls='bg', width=1400 if i == 0 else 800)}
+        note = fr_note(p, lang)
+        v = V(p, lang)
+        tiles += f"""<a class="lt lt{i}" href="{v['url']}" lang="{post_lang(p, lang)}">{img(p.get('cover'), v['title'], cls='bg', width=1400 if i == 0 else 800)}
 <span class="lt-shade"></span><span class="lt-pin">{p['step']}</span>
 <span class="lt-body"><span class="lt-meta">{post_flags(p, 15)} {esc(fdate(p['dt'], lang))}</span>
-<span class="lt-title">{esc(p['title'])}{note}</span>{f'<span class="lt-ex">{esc(p["excerpt"])}</span>' if i == 0 else ''}
+<span class="lt-title">{esc(v['title'])}{note}</span>{f'<span class="lt-ex">{esc(v["excerpt"])}</span>' if i == 0 else ''}
 <span class="lt-go">{'Lire le récit' if lang == 'fr' else 'Read the story'} <b aria-hidden="true">→</b></span></span></a>"""
     n = len(trip["posts"])
     return f"""<section class="latest" style="--trip:{trip['color']}"><div class="wrap">
@@ -580,7 +608,7 @@ def all_points(trips, lang):
     for t in trips:
         for p in t["posts"]:
             if p.get("geo"):
-                pts.append({"lat": p["geo"][0], "lng": p["geo"][1], "title": p["title"], "url": p["url"],
+                pts.append({"lat": p["geo"][0], "lng": p["geo"][1], "title": V(p, lang)["title"], "url": V(p, lang)["url"],
                             "label": t["title"][lang], "color": t["color"], "r": 6})
     return pts
 
@@ -602,7 +630,7 @@ def page_home(lang, posts, trips, books):
     featured = [x for x in trips if x.get("featured")]
     others = [x for x in trips if not x.get("featured")]
     st = stats(posts, trips)
-    first_url = latest[0]["url"] if lang == "fr" else trip_url(latest_trip, lang)
+    first_url = V(latest[0], lang)["url"] if (lang == "fr" or latest[0].get("en")) else trip_url(latest_trip, lang)
     avignon = next((b for b in books if b["id"] == "avignon"), None)
     av_card = ""
     if avignon:
@@ -715,18 +743,19 @@ def page_trip(lang, trip, books):
     items = ""
     month = None
     for p in trip["posts"]:
-        note = ' <span class="lang-note">FR</span>' if lang == "en" else ""
+        note = fr_note(p, lang)
+        v = V(p, lang)
         m = (p["dt"].year, p["dt"].month)
         if m != month:
             month = m
             items += f'<li class="route-month"><span>{esc(fdate(p["dt"], lang, False))}</span></li>'
         side = "l" if p["step"] % 2 else "r"
         items += f"""<li class="leg {side}"><span class="pin" aria-hidden="true">{p['step']}</span>
-<a class="leg-card" href="{p['url']}" lang="fr"><figure class="snap">{img(p.get('cover'), p['title'], cls='', width=900)}
+<a class="leg-card" href="{v['url']}" lang="{post_lang(p, lang)}"><figure class="snap">{img(p.get('cover'), v['title'], cls='', width=900)}
 <figcaption>{esc(fdate(p['dt'], lang))}</figcaption></figure>
-<div class="leg-txt"><span class="label ochre">{t['step']} {p['step']} {t['of']} {n}{leg_km(p)}</span><h3>{esc(p['title'])}{note}</h3><p>{esc(p['excerpt'])}</p>
-<span class="go">{'Lire le récit →' if lang == 'fr' else 'Read the story (in French) →'}</span></div></a></li>"""
-    pts = [{"lat": p["geo"][0], "lng": p["geo"][1], "title": p["title"], "url": p["url"],
+<div class="leg-txt"><span class="label ochre">{t['step']} {p['step']} {t['of']} {n}{leg_km(p)}</span><h3>{esc(v['title'])}{note}</h3><p>{esc(v['excerpt'])}</p>
+<span class="go">{'Lire le récit →' if lang == 'fr' else ('Read the story →' if p.get('en') else 'Read the story (in French) →')}</span></div></a></li>"""
+    pts = [{"lat": p["geo"][0], "lng": p["geo"][1], "title": V(p, lang)["title"], "url": V(p, lang)["url"],
             "label": f"{t['step']} {p['step']}", "color": trip["color"]} for p in trip["posts"] if p.get("geo")]
     map_sec = ""
     if pts:
@@ -765,7 +794,7 @@ def render_body(body, lang="fr", trip=None):
         url = m.group(2)
         mm = re.match(r"^/\d{4}/\d{2}/\d{2}/([^/]+)/?$", url)
         if mm and mm.group(1) in URL_BY_SLUG:
-            url = URL_BY_SLUG[mm.group(1)]
+            url = V(URL_BY_SLUG[mm.group(1)], lang)["url"]
         return m.group(1) + url + m.group(3)
     body = re.sub(r'(<a[^>]*?\shref=")(/\d{4}/[^"]+)(")', fix_link, body)
 
@@ -781,11 +810,11 @@ def render_body(body, lang="fr", trip=None):
     return body
 
 
-def page_post(p, posts_by_trip):
-    lang = "fr"
+def page_post(p, lang="fr"):
     t = T[lang]
+    v = V(p, lang)
     trip = p.get("trip")
-    mins = max(1, round(p["words"] / 230))
+    mins = max(1, round(v["words"] / 230))
     fl = post_flags(p, 16)
     chips = (f'<span class="flag-chip">{fl}</span>' if fl else "") + f"<span>{esc(fdate(p['dt'], lang))}</span><span>{mins} {t['read_min']}</span>"
     crumbs = ""
@@ -801,11 +830,11 @@ def page_post(p, posts_by_trip):
             km = act_totals(p["acts"])[0]
             chips += f'<a class="km-chip" href="#traces">{motif_svg("velo" if act_kind(p["acts"], lang) != "pied" else "pied", 18, "currentColor", 1.8)}{fkm(km)} km</a>'
         lis = "".join(
-            f'<a href="{q["url"]}"{" aria-current=\"page\" style=\"font-weight:700;color:var(--ink)\"" if q is p else ""}>{q["step"]}. {esc(q["title"])}</a>'
+            f'<a href="{V(q, lang)["url"]}"{" aria-current=\"page\" style=\"font-weight:700;color:var(--ink)\"" if q is p else ""}>{q["step"]}. {esc(V(q, lang)["title"])}</a>'
             for q in tp) if len(tp) <= 40 else ""
         mini = ""
         if p.get("geo"):
-            pts = [{"lat": q["geo"][0], "lng": q["geo"][1], "title": q["title"], "url": q["url"], "color": trip["color"] if q is not p else "#B5483B",
+            pts = [{"lat": q["geo"][0], "lng": q["geo"][1], "title": V(q, lang)["title"], "url": V(q, lang)["url"], "color": trip["color"] if q is not p else "#B5483B",
                     "r": 5 if q is not p else 8} for q in tp if q.get("geo")]
             mini = map_div(trip_map_data(trip, pts, [a["id"] for a in p.get("acts", [])]), "map", t["trip_map"]).replace('class="map"', 'class="map" style="aspect-ratio:auto;height:240px;min-height:0"')
         aside = f"""<aside class="post-aside"><div class="aside-card"><span class="aside-stamp">{stamp_svg(trip, lang, 96)}</span><span class="kicker">{t['the_trip']}</span>
@@ -814,11 +843,12 @@ def page_post(p, posts_by_trip):
         prev_p = tp[i - 1] if i > 0 else None
         next_p = tp[i + 1] if i + 1 < len(tp) else None
         mode_icon = motif_svg(trip.get("mode", "velo"), 30, "#FFFDF8", 2.4)
-        nav = f'<nav class="post-nav2" aria-label="Récits" style="--trip:{trip["color"]}">'
+        nav = f'<nav class="post-nav2" aria-label="{esc(t["trip_stories"])}" style="--trip:{trip["color"]}">'
         if next_p:
-            nav += f"""<a class="nx" href="{next_p['url']}">{img(next_p.get('cover'), '', cls='bg', width=1200)}
+            nv = V(next_p, lang)
+            nav += f"""<a class="nx" href="{nv['url']}">{img(next_p.get('cover'), '', cls='bg', width=1200)}
 <span class="shade"></span><span class="nx-top"><span class="nx-kicker">{t['next'].replace(' →', '')}</span><span class="nx-step">{t['step']} {next_p['step']}</span></span>
-<span class="nx-title">{esc(next_p['title'])}</span><span class="nx-date">{esc(fdate(next_p['dt'], lang))}</span>
+<span class="nx-title">{esc(nv['title'])}</span><span class="nx-date">{esc(fdate(next_p['dt'], lang))}</span>
 <span class="nx-road" aria-hidden="true"><span class="nx-rider">{mode_icon}</span><span class="nx-arrow">→</span></span></a>"""
         else:
             nav += f"""<a class="nx end" href="{trip_url(trip, lang)}"><span class="shade"></span><span class="nx-top"><span class="nx-kicker">{'Fin du voyage' if lang == 'fr' else 'End of the journey'}</span></span>
@@ -826,15 +856,19 @@ def page_post(p, posts_by_trip):
 <span class="nx-road" aria-hidden="true"><span class="nx-rider">{mode_icon}</span><span class="nx-arrow">→</span></span></a>"""
         nav += "</nav>"
         if prev_p:
-            prev_html = f"""<a class="pv" href="{prev_p['url']}">{img(prev_p.get('cover'), '', cls='', width=500)}<span><span class="label">{t['prev']}</span><b>{esc(prev_p['title'])}</b></span></a>"""
+            pv = V(prev_p, lang)
+            prev_html = f"""<a class="pv" href="{pv['url']}">{img(prev_p.get('cover'), '', cls='', width=500)}<span><span class="label">{t['prev']}</span><b>{esc(pv['title'])}</b></span></a>"""
     cover = ""
     if p.get("cover"):
-        cover = f'<div class="wrap post-cover"><div class="cover-frame">{img(p["cover"], p["title"], cls="", width=1800, extra=" fetchpriority=\"high\"")}{post_decor(trip, "fr")[0]}</div></div>'
-    body = f"""{post_decor(trip, "fr")[1]}<section class="wrap post-head">{crumbs}<h1>{esc(p['title'])}</h1><div class="meta">{chips}</div></section>
+        cover = f'<div class="wrap post-cover"><div class="cover-frame">{img(p["cover"], v["title"], cls="", width=1800, extra=" fetchpriority=\"high\"")}{post_decor(trip, lang)[0]}</div></div>'
+    body = f"""{post_decor(trip, lang)[1]}<section class="wrap post-head">{crumbs}<h1>{esc(v['title'])}</h1><div class="meta">{chips}</div></section>
 {cover}
-<div class="wrap post-wrap">{aside}<article class="prose">{prev_html}{render_body(p['body'], trip=trip)}{tracks_section(p, trip) if trip else ""}{nav}</article></div>"""
-    alt = trip_url(trip, "en") if trip else PATHS["en"]["home"]
-    write(p["url"], layout(lang, p["url"], p["title"], p.get("description") or p["excerpt"], body, alt, image=p.get("cover"), active="trips"))
+<div class="wrap post-wrap">{aside}<article class="prose">{prev_html}{render_body(v['body'], lang, trip=trip)}{tracks_section(p, trip, lang) if trip else ""}{nav}</article></div>"""
+    if lang == "fr":
+        alt = p["en"]["url"] if p.get("en") else (trip_url(trip, "en") if trip else PATHS["en"]["home"])
+    else:
+        alt = p["url"]
+    write(v["url"], layout(lang, v["url"], v["title"], v.get("description") or v["excerpt"], body, alt, image=p.get("cover"), active="trips"))
 
 
 def page_map(lang, trips):
@@ -881,7 +915,7 @@ def page_archive(lang, posts):
         years.setdefault(p["dt"].year, []).append(p)
     blocks = ""
     for y, ps in years.items():
-        lis = "".join(f'<li><a href="{p["url"]}" lang="fr">{esc(p["title"])}</a><span>{esc(fdate(p["dt"], lang))}'
+        lis = "".join(f'<li><a href="{V(p, lang)["url"]}" lang="{post_lang(p, lang)}">{esc(V(p, lang)["title"])}</a>{fr_note(p, lang)}<span>{esc(fdate(p["dt"], lang))}'
                       f'{" · " + esc(p["trip"]["title"][lang]) if p.get("trip") else ""}</span></li>' for p in ps)
         blocks += f'<div class="year"><h2>{y}</h2><ul>{lis}</ul></div>'
     body = f"""<section class="wrap post-head"><p class="kicker">{t['nav_archive']}</p><h1>{t['archive_title']}</h1>
@@ -933,7 +967,7 @@ def feeds(posts, trips):
     for lang in ("fr", "en"):
         urls += list(PATHS[lang].values())
         urls += [trip_url(x, lang) for x in trips]
-    urls += [p["url"] for p in posts]
+    urls += [p["url"] for p in posts] + [p["en"]["url"] for p in posts if p.get("en")]
     sm = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     sm += "".join(f"<url><loc>{SITE_URL}{u}</loc></url>\n" for u in urls) + "</urlset>\n"
     with open(os.path.join(OUT, "sitemap.xml"), "w", encoding="utf-8") as f:
@@ -969,7 +1003,7 @@ def main():
     books = json.load(open(os.path.join(ROOT, "data", "books.json"), encoding="utf-8"))
     assign_strava(trips)
     for p in posts:
-        URL_BY_SLUG[p["url"].rstrip("/").split("/")[-1]] = p["url"]
+        URL_BY_SLUG[p["url"].rstrip("/").split("/")[-1]] = p
     for lang in ("fr", "en"):
         page_home(lang, posts, trips, books)
         page_trips(lang, trips)
@@ -980,7 +1014,9 @@ def main():
         page_archive(lang, posts)
         page_about(lang)
     for p in posts:
-        page_post(p, None)
+        page_post(p, "fr")
+        if p.get("en"):
+            page_post(p, "en")
     page_404()
     feeds(posts, trips)
     for cat, target in OLD_CATEGORIES.items():
