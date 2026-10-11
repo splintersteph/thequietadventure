@@ -1,0 +1,38 @@
+name: Rapatrier les photos depuis WordPress
+
+# À lancer une fois (onglet Actions › « Rapatrier les photos » › Run workflow),
+# AVANT de faire pointer le domaine vers GitHub.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Installer ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: Télécharger photos et vidéos
+        run: python tools/fetch_media.py
+      - name: Enregistrer dans le dépôt
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898281+github-actions[bot]@users.noreply.github.com"
+          for d in media/*/ ; do
+            git add "$d"
+            git diff --cached --quiet || { git commit -q -m "Médias : ${d#media/}"; git push -q; }
+          done
+          git add data/media-missing.txt
+          git diff --cached --quiet || { git commit -q -m "Liste des médias manquants"; git push -q; }
+      - name: Republier le site avec les photos locales
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy.yml --ref main
