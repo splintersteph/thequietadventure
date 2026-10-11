@@ -209,6 +209,21 @@
   }
 })();
 
+// Fin de voyage : le voyageur file vers le voyage suivant quand on arrive au bout de la route
+(function () {
+  var el = document.querySelector(".route-next");
+  if (!el || !("IntersectionObserver" in window)) return;
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  el.classList.add("armed");
+  var io = new IntersectionObserver(function (es) {
+    if (!es[0].isIntersecting) return;
+    io.disconnect();
+    el.classList.add("in");
+    setTimeout(function () { el.classList.add("done"); }, 2400);
+  }, { threshold: 0.25 });
+  io.observe(el);
+})();
+
 // Apparition des étapes au défilement
 (function () {
   var legs = document.querySelectorAll(".leg");

@@ -524,3 +524,51 @@ a:hover { color: var(--forest-deep); }
   .tracks .tk-map { aspect-ratio: 4 / 5; }
   .tk-stats b { font-size: 22px; }
 }
+
+/* ---------- Fin de voyage : la route continue vers le voyage suivant ---------- */
+.route-end a { text-decoration: none; }
+.route-next { --next: var(--ochre); grid-column: 1 / -1; position: relative; z-index: 1; margin: 12px 0 0; padding-bottom: 8px; background: var(--paper); }
+.rn { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: var(--ink); }
+.rn:hover { color: var(--ink); }
+.rn-end span { display: inline-block; padding: 6px 18px; border-radius: 999px; background: var(--ink); color: #FFFDF8; font-family: var(--hand); font-size: 24px; line-height: 1.2; box-shadow: 0 4px 12px rgba(60, 45, 30, .15); }
+.rn-road { position: relative; z-index: 2; display: block; width: 120px; height: 220px; margin: -2px 0 -6px; }
+.rn-road > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; transition: clip-path 1.6s ease-in-out; clip-path: inset(0 0 0 0); }
+.rn-road > svg path { fill: none; stroke: var(--next); stroke-width: 3; stroke-dasharray: .028 .022; opacity: .8; }
+.rn-rider { position: absolute; top: 0; left: 0; display: grid; place-items: center; width: 50px; height: 50px; border-radius: 50%; background: var(--next); border: 3px solid #FFFDF8; box-shadow: 0 6px 16px rgba(60, 45, 30, .25);
+  offset-path: path("M60 0 C60 60 20 70 30 120 S100 170 60 220"); offset-rotate: 0deg; offset-distance: 100%; transition: offset-distance 1.7s cubic-bezier(.45, .05, .25, 1); }
+.rn-rider svg { width: 30px; height: 30px; animation: bob 1s ease-in-out infinite alternate; }
+.rn-card { position: relative; display: block; width: min(760px, 100%); aspect-ratio: 16 / 8; min-height: 260px; overflow: hidden; background: var(--next); box-shadow: 0 22px 46px rgba(60, 45, 30, .25);
+  transform: rotate(-1deg); transition: transform .5s ease, box-shadow .5s ease, opacity .7s ease; text-align: left; }
+.rn-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.03); transition: transform 6s ease; }
+.rn-shade { position: absolute; inset: 0; background: linear-gradient(to top, rgba(24, 19, 14, .88), rgba(24, 19, 14, .3) 55%, rgba(24, 19, 14, .1)); }
+.rn-stamp { position: absolute; top: 16px; right: 18px; border-radius: 50%; background: rgba(255, 253, 248, .88); filter: drop-shadow(0 4px 10px rgba(0, 0, 0, .25)); animation: rn-spin 26s linear infinite; }
+.rn-stamp svg { display: block; }
+.rn-txt { position: absolute; left: 30px; right: 30px; bottom: 26px; display: flex; flex-direction: column; gap: 6px; color: #FFFDF8; }
+.rn-kicker { font-family: var(--hand); font-size: 30px; color: var(--sand); line-height: 1; }
+.rn-title { font-family: var(--serif); font-size: clamp(30px, 4vw, 46px); line-height: 1.05; letter-spacing: -.5px; text-shadow: 0 2px 14px rgba(0, 0, 0, .45); }
+.rn-meta { display: flex; align-items: center; gap: 8px; font-size: 14px; letter-spacing: 1.5px; text-transform: uppercase; opacity: .9; }
+.rn-meta .flag { box-shadow: 0 0 0 1px rgba(255, 255, 255, .5); }
+.rn-go { align-self: flex-start; margin-top: 8px; padding: 9px 18px; border-radius: 999px; background: #FFFDF8; color: var(--ink); font-weight: 700; font-size: 15px; }
+.rn-go b { display: inline-block; transition: transform .3s ease; }
+.rn:hover .rn-card, .rn:focus-visible .rn-card { transform: rotate(0) translateY(-6px); box-shadow: 0 30px 60px rgba(60, 45, 30, .3); }
+.rn:hover .rn-img { transform: scale(1.12); }
+.rn:hover .rn-go b { transform: translateX(6px); }
+.rn:hover .rn-rider { animation: rn-hop .5s ease-in-out infinite alternate; }
+@keyframes rn-spin { to { transform: rotate(360deg); } }
+@keyframes rn-hop { to { translate: 0 -6px; } }
+/* état avant l'apparition (le script ajoute .armed, puis .in quand on arrive au bout de la route) */
+.route-next.armed:not(.in) .rn-road > svg { clip-path: inset(0 0 100% 0); }
+.route-next.armed:not(.in) .rn-rider { offset-distance: 0%; }
+.route-next.armed:not(.in) .rn-card { opacity: 0; transform: rotate(-4deg) translateY(40px) scale(.94); }
+.route-next.armed .rn-card { transition: transform .8s cubic-bezier(.2, .9, .3, 1.2) 1.3s, box-shadow .5s ease, opacity .6s ease 1.3s; }
+.route-next.armed.in.done .rn-card { transition: transform .5s ease, box-shadow .5s ease, opacity .7s ease; }
+@media (max-width: 760px) {
+  .route-next { margin-left: -64px; }
+  .rn-road { height: 160px; }
+  .rn-road > svg { transform: scaleY(.727); transform-origin: top; }
+  .rn-rider { offset-path: path("M60 0 C60 44 20 51 30 87 S100 124 60 160"); }
+  .rn-card { aspect-ratio: 4 / 5; min-height: 0; }
+  .rn-stamp svg { width: 80px; height: 80px; }
+  .rn-txt { left: 20px; right: 20px; bottom: 20px; }
+}
+@media (prefers-reduced-motion: reduce) { .rn-stamp, .rn-rider svg, .rn:hover .rn-rider { animation: none; } .rn-rider { transition: none; } }

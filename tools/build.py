@@ -735,6 +735,24 @@ def trip_km_chip(trip, lang):
     return f'<span>{fkm(km)} km {T[lang]["km_" + kind]}</span>'
 
 
+def route_next(trip, lang):
+    """End of the timeline: a little road that leads the traveller on to the next journey."""
+    nxt = trip.get("next_trip")
+    if not nxt:
+        return (f'<li class="route-end"><a href="{PATHS[lang]["trips"]}"><span>'
+                f'{"La suite s’écrit en ce moment…" if lang == "fr" else "The next chapter is being written…"}</span></a></li>')
+    rider = motif_svg(nxt.get("mode", "velo"), 34, "#FFFDF8", 2.4)
+    return f"""<li class="route-next" style="--next:{nxt['color']}"><a class="rn" href="{trip_url(nxt, lang)}">
+<span class="rn-end"><span>{'Fin du voyage' if lang == 'fr' else 'The end'}</span></span>
+<span class="rn-road" aria-hidden="true"><svg viewBox="0 0 120 220" preserveAspectRatio="none"><path d="M60 0 C60 60 20 70 30 120 S100 170 60 220" pathLength="1"/></svg>
+<span class="rn-rider">{rider}</span></span>
+<span class="rn-card">{img(nxt.get('cover'), nxt['title'][lang], cls='rn-img', width=1200)}<span class="rn-shade"></span>
+<span class="rn-stamp">{stamp_svg(nxt, lang, 110)}</span>
+<span class="rn-txt"><span class="rn-kicker">{'Le voyage suivant' if lang == 'fr' else 'The next journey'}</span>
+<span class="rn-title">{esc(nxt['title'][lang])}</span><span class="rn-meta">{trip_flags(nxt, 16)} {esc(nxt['period'][lang])}</span>
+<span class="rn-go">{'Continuer la route' if lang == 'fr' else 'Keep going'} <b aria-hidden="true">→</b></span></span></span></a></li>"""
+
+
 def page_trip(lang, trip, books):
     t = T[lang]
     url = trip_url(trip, lang)
@@ -776,7 +794,7 @@ def page_trip(lang, trip, books):
 <div class="chips"><span class="flag-chip">{trip_flags(trip, 18)}</span><span>{t['modes'][trip['mode']]}</span><span>{n} {t['stories'] if n > 1 else t['story']}</span>{trip_km_chip(trip, lang)}</div></div></section>
 {map_sec}
 <section class="section"><div class="wrap"><div class="sec-head"><div><p class="kicker">{t['trip_stories']}</p></div></div>
-<ol class="route" style="--trip:{trip['color']}">{items}<li class="route-end" aria-hidden="true"><span>{'Fin du voyage' if lang == 'fr' else 'The end'}</span></li></ol></div></section>
+<ol class="route" style="--trip:{trip['color']}">{items}{route_next(trip, lang)}</ol></div></section>
 {book_sec}"""
     write(url, layout(lang, url, trip["title"][lang], trip["lead"][lang], body, other_url, image=trip.get("cover"), active="trips"))
 
@@ -851,7 +869,14 @@ def page_post(p, lang="fr"):
 <span class="nx-title">{esc(nv['title'])}</span><span class="nx-date">{esc(fdate(next_p['dt'], lang))}</span>
 <span class="nx-road" aria-hidden="true"><span class="nx-rider">{mode_icon}</span><span class="nx-arrow">→</span></span></a>"""
         else:
-            nav += f"""<a class="nx end" href="{trip_url(trip, lang)}"><span class="shade"></span><span class="nx-top"><span class="nx-kicker">{'Fin du voyage' if lang == 'fr' else 'End of the journey'}</span></span>
+            nxt = trip.get("next_trip")
+            if nxt:
+                nav += f"""<a class="nx" href="{trip_url(nxt, lang)}" style="--trip:{nxt['color']}">{img(nxt.get('cover'), '', cls='bg', width=1200)}
+<span class="shade"></span><span class="nx-top"><span class="nx-kicker">{'Voyage suivant' if lang == 'fr' else 'Next journey'}</span><span class="nx-step">{trip_flags(nxt, 14)}</span></span>
+<span class="nx-title">{esc(nxt['title'][lang])}</span><span class="nx-date">{esc(nxt['period'][lang])}</span>
+<span class="nx-road" aria-hidden="true"><span class="nx-rider">{motif_svg(nxt.get("mode", "velo"), 30, "#FFFDF8", 2.4)}</span><span class="nx-arrow">→</span></span></a>"""
+            else:
+                nav += f"""<a class="nx end" href="{trip_url(trip, lang)}"><span class="shade"></span><span class="nx-top"><span class="nx-kicker">{'Fin du voyage' if lang == 'fr' else 'End of the journey'}</span></span>
 <span class="nx-title">{'Revoir tout le voyage' if lang == 'fr' else 'See the whole journey'} : {esc(trip['title'][lang])}</span>
 <span class="nx-road" aria-hidden="true"><span class="nx-rider">{mode_icon}</span><span class="nx-arrow">→</span></span></a>"""
         nav += "</nav>"
@@ -1002,6 +1027,9 @@ def main():
     trips, leftovers = assign_trips(posts, json.load(open(os.path.join(ROOT, "data", "trips.json"), encoding="utf-8")))
     books = json.load(open(os.path.join(ROOT, "data", "books.json"), encoding="utf-8"))
     assign_strava(trips)
+    chrono = sorted(trips, key=lambda x: x["start"])
+    for a, b in zip(chrono, chrono[1:]):
+        a["next_trip"] = b
     for p in posts:
         URL_BY_SLUG[p["url"].rstrip("/").split("/")[-1]] = p
     for lang in ("fr", "en"):
