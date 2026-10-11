@@ -16,7 +16,8 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "content", "posts")
 DST = os.path.join(ROOT, "content", "posts-en")
-BLOCK = re.compile(r"<(p|h[1-6]|li|figcaption|blockquote)(\s[^>]*)?>(.*?)</\1>", re.S)
+BLOCK = re.compile(r"<(p|h[1-6]|li|figcaption)(\s[^>]*)?>(.*?)</\1>", re.S)
+QUOTE = re.compile(r"<(blockquote)(\s[^>]*)?>(.*?)</blockquote>", re.S)
 EMBED = re.compile(r"<(?:img|iframe|video)\b[^>]*?(?:/>|>(?:</(?:iframe|video)>)?)|<br\s*/?>", re.S)
 
 
@@ -39,10 +40,14 @@ def parse(path):
 def segments(body):
     """Yield (start, end, text_with_tokens, embeds) for every block that holds text."""
     out = []
-    for m in BLOCK.finditer(body):
-        inner = m.group(3)
-        if m.group(1) == "blockquote" and "<p" in inner:
+    found = list(BLOCK.finditer(body)) + [q for q in QUOTE.finditer(body) if "<p" not in q.group(3)]
+    found.sort(key=lambda m: m.start())
+    last = -1
+    for m in found:
+        if m.start() < last:
             continue
+        last = m.end()
+        inner = m.group(3)
         embeds = []
 
         def tok(e):
