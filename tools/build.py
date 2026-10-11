@@ -286,7 +286,7 @@ def layout(lang, path, title, desc, content, alt_path=None, image=None, active=N
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Karla:wght@400;500;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/site.css">
+<link rel="stylesheet" href="/assets/css/site.css?v={VERSION}">
 </head>
 <body class="{body_class}">
 <a class="skip" href="#main">{t['skip']}</a>
@@ -315,10 +315,21 @@ def layout(lang, path, title, desc, content, alt_path=None, image=None, active=N
 <div class="bottom"><span>The Quiet Adventure — {t['since']}</span><span><a href="{PATHS['fr']['home']}" lang="fr">Français</a> · <a href="{PATHS['en']['home']}" lang="en">English</a></span></div>
 </div>
 </footer>
-<script src="/assets/js/site.js" defer></script>
+<script src="/assets/js/site.js?v={VERSION}" defer></script>
 </body>
 </html>
 """
+
+
+def asset_version():
+    import hashlib
+    h = hashlib.md5()
+    for f in ("assets/css/site.css", "assets/js/site.js"):
+        h.update(open(os.path.join(ROOT, f), "rb").read())
+    return h.hexdigest()[:8]
+
+
+VERSION = asset_version()
 
 
 def with_base(content):
