@@ -18,7 +18,7 @@ import shutil
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from decor import hero_decor, post_decor, post_flags, stamp_svg, trip_flags  # noqa: E402
+from decor import hero_decor, motif_svg, post_decor, post_flags, stamp_svg, trip_flags  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "_site")
@@ -631,11 +631,19 @@ def page_post(p, posts_by_trip):
 <span class="label">{esc(trip['period'][lang])}</span>{mini}<nav aria-label="{esc(t['trip_stories'])}">{lis}</nav></div></aside>"""
         prev_p = tp[i - 1] if i > 0 else None
         next_p = tp[i + 1] if i + 1 < len(tp) else None
-        nav = '<nav class="post-nav" aria-label="Récits">'
-        if prev_p:
-            nav += f'<a class="prev" href="{prev_p["url"]}"><span class="label">{t["prev"]}</span><b>{esc(prev_p["title"])}</b></a>'
+        mode_icon = motif_svg(trip.get("mode", "velo"), 30, "#FFFDF8", 2.4)
+        nav = f'<nav class="post-nav2" aria-label="Récits" style="--trip:{trip["color"]}">'
         if next_p:
-            nav += f'<a class="next" href="{next_p["url"]}"><span class="label">{t["next"]}</span><b>{esc(next_p["title"])}</b></a>'
+            nav += f"""<a class="nx" href="{next_p['url']}">{img(next_p.get('cover'), '', cls='bg', width=1200)}
+<span class="shade"></span><span class="nx-top"><span class="nx-kicker">{t['next'].replace(' →', '')}</span><span class="nx-step">{t['step']} {next_p['step']}</span></span>
+<span class="nx-title">{esc(next_p['title'])}</span><span class="nx-date">{esc(fdate(next_p['dt'], lang))}</span>
+<span class="nx-road" aria-hidden="true"><span class="nx-rider">{mode_icon}</span><span class="nx-arrow">→</span></span></a>"""
+        else:
+            nav += f"""<a class="nx end" href="{trip_url(trip, lang)}"><span class="shade"></span><span class="nx-top"><span class="nx-kicker">{'Fin du voyage' if lang == 'fr' else 'End of the journey'}</span></span>
+<span class="nx-title">{'Revoir tout le voyage' if lang == 'fr' else 'See the whole journey'} : {esc(trip['title'][lang])}</span>
+<span class="nx-road" aria-hidden="true"><span class="nx-rider">{mode_icon}</span><span class="nx-arrow">→</span></span></a>"""
+        if prev_p:
+            nav += f"""<a class="pv" href="{prev_p['url']}">{img(prev_p.get('cover'), '', cls='', width=500)}<span><span class="label">{t['prev']}</span><b>{esc(prev_p['title'])}</b></span></a>"""
         nav += "</nav>"
     cover = ""
     if p.get("cover"):
