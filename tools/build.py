@@ -459,7 +459,7 @@ def layout(lang, path, title, desc, content, alt_path=None, image=None, active=N
 <meta property="og:image" content="{esc(og)}">
 <meta property="og:locale" content="{'fr_FR' if lang == 'fr' else 'en_GB'}">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="alternate" type="application/rss+xml" title="The Quiet Adventure" href="/feed.xml">
+<link rel="alternate" type="application/rss+xml" title="The Quiet Adventure" href="{FEED[lang]}">
 <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -490,7 +490,7 @@ def layout(lang, path, title, desc, content, alt_path=None, image=None, active=N
 <div class="wrap">
 <div class="top">
 <div><b>{t['footer_follow']}</b><p>{t['footer_follow_txt']}</p></div>
-<div class="links"><a href="/feed.xml">{t['rss']}</a><a href="{P['archive']}">{t['nav_archive']}</a><a href="{P['trips']}">{t['nav_trips']}</a><a href="{P['books']}">{t['nav_books']}</a></div>
+<div class="links"><a href="{FEED[lang]}">{t['rss']}</a><a href="{P['archive']}">{t['nav_archive']}</a><a href="{P['trips']}">{t['nav_trips']}</a><a href="{P['books']}">{t['nav_books']}</a></div>
 </div>
 <div class="bottom"><span>The Quiet Adventure — {t['since']}</span><span><a href="{PATHS['fr']['home']}" lang="fr">Français</a> · <a href="{PATHS['en']['home']}" lang="en">English</a></span></div>
 </div>
@@ -973,21 +973,29 @@ def page_404():
     write("/404.html", layout("fr", "/404.html", "Page introuvable", t["notfound_txt"], body))
 
 
+FEED = {"fr": "/feed.xml", "en": "/en/feed.xml"}
+
+
 def feeds(posts, trips):
     latest = sorted(posts, key=lambda p: p["dt"], reverse=True)[:20]
-    items = ""
-    for p in latest:
-        cover = media(p.get("cover"), 1200)
-        if cover.startswith("/"):
-            cover = SITE_URL + cover
-        items += f"""<item><title>{esc(p['title'])}</title><link>{SITE_URL}{p['url']}</link><guid>{SITE_URL}{p['url']}</guid>
-<pubDate>{p['dt'].strftime('%a, %d %b %Y %H:%M:%S')} +0000</pubDate><description>{esc(p['excerpt'])}</description>
+    for lang in ("fr", "en"):
+        items = ""
+        for p in latest:
+            v = p["en"] if lang == "en" and p.get("en") else p
+            cover = media(p.get("cover"), 1200)
+            if cover.startswith("/"):
+                cover = SITE_URL + cover
+            items += f"""<item><title>{esc(v['title'])}</title><link>{SITE_URL}{v['url']}</link><guid>{SITE_URL}{v['url']}</guid>
+<pubDate>{p['dt'].strftime('%a, %d %b %Y %H:%M:%S')} +0000</pubDate><description>{esc(v['excerpt'])}</description>
 {f'<enclosure url="{esc(cover)}" type="image/jpeg" length="0"/>' if cover else ''}</item>"""
-    rss = f"""<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0"><channel><title>The Quiet Adventure</title><link>{SITE_URL}/</link>
-<description>Carnets de voyage, à vélo et en famille.</description><language>fr</language>{items}</channel></rss>"""
-    with open(os.path.join(OUT, "feed.xml"), "w", encoding="utf-8") as f:
-        f.write(rss)
+        desc = "Carnets de voyage, à vélo et en famille." if lang == "fr" else "Travel journals, by bike and as a family."
+        home = "/" if lang == "fr" else "/en/"
+        rss = f"""<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel><title>The Quiet Adventure</title><link>{SITE_URL}{home}</link>
+<description>{desc}</description><language>{lang}</language>{items}</channel></rss>"""
+        os.makedirs(os.path.join(OUT, home.strip("/")), exist_ok=True)
+        with open(os.path.join(OUT, home.strip("/"), "feed.xml"), "w", encoding="utf-8") as f:
+            f.write(rss)
     urls = []
     for lang in ("fr", "en"):
         urls += list(PATHS[lang].values())
