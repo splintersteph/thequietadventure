@@ -1,0 +1,146 @@
+{
+ "_doc": "Traces Strava rattachées aux récits qui n'en contiennent pas déjà (slug du récit -> identifiants d'activités). 'trips' : traces en plus pour la carte d'un voyage.",
+ "posts": {
+  "de-marseille-a-lyon-ou-comment-faire-toutes-les-erreurs-de-debutants-possibles": [
+   "12854408558",
+   "12854410800",
+   "12854414684",
+   "12854420656",
+   "12854428898",
+   "12854468395",
+   "12854432076",
+   "12854435842"
+  ],
+  "de-toulouse-a-agen-un-recit-au-fil-du-canal": [
+   "12246769606",
+   "12249937541",
+   "12249947250"
+  ],
+  "dagen-a-bordeaux-la-fin-dune-premiere-aventure-a-velo-en-famille": [
+   "12845131629",
+   "12886674643",
+   "12886688186",
+   "12886703315"
+  ],
+  "la-via-allier-de-langogne-a-clermont-un-itineraire-loin-des-touristes": [
+   "9643730081",
+   "9643730076",
+   "9643730074",
+   "9643730096",
+   "9643730049",
+   "9643730117",
+   "9643730028"
+  ],
+  "sur-la-veloroute-des-gorges-du-tarn-entre-gaillac-et-saint-rome-du-tarn": [
+   "11330997009",
+   "11339728370"
+  ],
+  "sur-la-veloroute-des-gorges-du-tarn-entre-ambialet-et-saint-rome-de-tarn": [
+   "11344749259",
+   "12442216518",
+   "11362231227"
+  ],
+  "dans-les-villages-secrets-de-lozere-entre-saint-rome-de-tarn-et-genholac": [
+   "12616701486",
+   "11386270519"
+  ],
+  "recapitulatif-de-notre-voyage-a-velo-dans-les-gorges-du-tarn": [
+   "11330997009",
+   "11339728370",
+   "11344749259",
+   "12442216518",
+   "11362231227",
+   "12616701486",
+   "11386270519"
+  ],
+  "de-bedarieux-a-castres-le-long-de-la-passa-pais": [
+   "12298979019",
+   "12306160612",
+   "12314689497"
+  ],
+  "de-castres-a-bedarieux-en-essayant-dechapper-a-la-pluie": [
+   "12332825678",
+   "12341007054",
+   "12342454316"
+  ],
+  "une-aventure-a-velo-en-famille-le-long-de-la-belle-via": [
+   "12759405417",
+   "12765208155",
+   "12774010008",
+   "12781659329"
+  ],
+  "a-la-decouverte-du-plateau-du-vercors-a-velo-et-en-famille": [
+   "12789787397",
+   "12797869693",
+   "12805147701",
+   "12813259578"
+  ],
+  "le-retour-en-europe": [
+   "15761533888",
+   "15788038022"
+  ],
+  "trois-jours-en-slovenie": [
+   "15798184472",
+   "15808123396",
+   "15820290166",
+   "15828413341"
+  ],
+  "de-la-slovenie-a-litalie-par-les-alpes": [
+   "15842768797",
+   "15853553871",
+   "15865296678"
+  ],
+  "en-traversant-litalie": [
+   "15879492772"
+  ],
+  "de-la-venetie-au-piemont": [
+   "15898841842",
+   "15939289900"
+  ],
+  "deux-derniers-jours-a-seoul": [
+   "14536115539"
+  ],
+  "ou-lon-visite-un-hopital-japonais": [
+   "15280622523"
+  ],
+  "kumamoto-la-ville-de-kumamon-et-de-one-piece": [
+   "15350275159",
+   "15372006975"
+  ],
+  "gongju-sejong-et-mokcheon": [
+   "15678175287"
+  ],
+  "en-cheminant-vers-incheon": [
+   "15703123155"
+  ],
+  "derniers-jours-en-coree": [
+   "15727889758",
+   "15735833132"
+  ],
+  "randonnees-et-experiences-uniques-au-coeur-de-la-nouvelle-zelande-lake-tekapo-et-mont-cook": [
+   "12358593224"
+  ],
+  "exploration-de-la-highway-1-et-bixby-bridge-road-trip-pittoresque-sur-la-cote-ouest-americaine": [
+   "12382726786"
+  ],
+  "immanquables-de-lile-dorleans-a-quebec": [
+   "12321089898"
+  ],
+  "exploration-des-joyaux-caches-de-banff": [
+   "12466150659"
+  ],
+  "randonnee-epique-dans-les-rocheuses-defis-et-recompenses": [
+   "12614022969",
+   "12614186295"
+  ],
+  "aventures-au-glacier-de-liceline-trail-en-colombie-britannique": [
+   "12614263644"
+  ]
+ },
+ "trips": {
+  "retour-en-europe-a-velo": [
+   "15931804597",
+   "15941994804"
+  ]
+ }
+}

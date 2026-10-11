@@ -69,3 +69,11 @@ puis ouvrir http://localhost:8000.
 | `assets/` | styles, script, photos de la page d'accueil, couvertures des livres |
 | `media/` | photos et vidéos des récits |
 | `tools/` | `build.py` (génération du site), `fetch_media.py`, `import_wp.py` |
+
+## Traces Strava
+
+Les traces affichées sur les récits et les cartes viennent de `data/strava/activities.json` (sorties vélo et randonnées, sans les 300 premiers et derniers mètres de chaque trace).
+
+- Un récit qui contient `<div class="strava" data-activity="ID"></div>` affiche automatiquement la carte de cette sortie.
+- Pour rattacher des sorties à un récit sans toucher au texte, ajouter les identifiants dans `data/strava/posts.json`, sous le nom du récit.
+- Pour ajouter de nouvelles sorties : exporter la liste des activités Strava (avec les polylignes) en JSON, puis `python tools/strava_merge.py export.json`.

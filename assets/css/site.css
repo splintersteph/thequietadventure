@@ -391,7 +391,7 @@ a:hover { color: var(--forest-deep); }
 
 /* ---------- Récit suivant ---------- */
 .post-nav2 { --trip: var(--ochre); margin-top: 3.2em; display: flex; flex-direction: column; gap: 18px; font-family: var(--sans); }
-.post-nav2 .nx { position: relative; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; min-height: 300px; padding: 28px 30px 70px; overflow: hidden; text-decoration: none; color: #FFFDF8; background: var(--trip); box-shadow: 0 18px 40px rgba(60, 45, 30, .22); transform: rotate(-.6deg); transition: transform .35s ease, box-shadow .35s ease; }
+.post-nav2 .nx { position: relative; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; min-height: 300px; padding: 80px 30px 70px; overflow: hidden; text-decoration: none; color: #FFFDF8; background: var(--trip); box-shadow: 0 18px 40px rgba(60, 45, 30, .22); transform: rotate(-.6deg); transition: transform .35s ease, box-shadow .35s ease; }
 .post-nav2 .nx:hover { transform: rotate(0) translateY(-4px); color: #FFFDF8; box-shadow: 0 26px 50px rgba(60, 45, 30, .28); }
 .post-nav2 .nx .bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.04); transition: transform 6s ease; cursor: pointer; }
 .post-nav2 .nx:hover .bg { transform: scale(1.14); }
@@ -416,7 +416,7 @@ a:hover { color: var(--forest-deep); }
 .prose > .pv img { width: 96px; height: 72px; object-fit: cover; flex: none; cursor: pointer; margin: 0; }
 .prose > .pv > span { margin: 0; }
 .prose > .pv b { display: block; font-family: var(--serif); font-weight: 400; font-size: 19px; line-height: 1.25; margin-top: 2px; }
-@media (max-width: 560px) { .post-nav2 .nx { min-height: 240px; padding: 24px 20px 64px; } .nx-top, .nx-road { left: 20px; right: 20px; } }
+@media (max-width: 560px) { .post-nav2 .nx { min-height: 240px; padding: 76px 20px 64px; } .nx-title { font-size: 26px; } .nx-top, .nx-road { left: 20px; right: 20px; } }
 @media (prefers-reduced-motion: reduce) { .nx-kicker, .nx-rider svg { animation: none; } .nx-rider, .post-nav2 .nx .bg { transition: none; } }
 
 /* ---------- Accueil : le dernier voyage ---------- */
@@ -471,3 +471,56 @@ a:hover { color: var(--forest-deep); }
 .prose > .pv img { width: 72px; height: 54px; }
 .prose > .pv b { font-size: 17px; }
 .prose > .pv:hover { transform: rotate(0) translateX(-4px); }
+
+/* ---------- Traces Strava ---------- */
+.post-head .meta .km-chip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 14px 5px 10px; border-radius: 999px; background: var(--forest); color: var(--on-forest); text-decoration: none; font-weight: 700; }
+.post-head .meta .km-chip:hover { background: var(--forest-deep); color: var(--on-forest); }
+.post-head .meta .km-chip svg { flex: none; }
+
+.trk { margin: 34px 0; list-style: none; }
+.trk > a { display: grid; grid-template-columns: 132px 1fr; gap: 0; background: var(--card); box-shadow: var(--shadow); text-decoration: none; color: var(--ink); border-left: 4px solid var(--trip, var(--forest)); transition: transform .35s ease, box-shadow .35s ease; }
+.trk > a:hover { color: var(--ink); transform: translateY(-3px) rotate(-.3deg); box-shadow: 0 1px 0 #E2D7C3, 0 18px 34px rgba(60, 45, 30, .14); }
+.trk-svg { width: 132px; height: 100%; min-height: 96px; display: block; background-color: var(--paper-deep);
+  background-image: radial-gradient(rgba(74, 67, 60, .16) 1px, transparent 1.2px); background-size: 9px 9px; }
+.prose .trk-svg { margin: 0; }
+.trk-bg { fill: none; stroke: #FFFDF8; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+.trk-line { fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 0; }
+.trk-a { fill: #FFFDF8; stroke: var(--ink); stroke-width: 1.6; }
+.trk-b { stroke: #FFFDF8; stroke-width: 1.6; }
+.trk.rv:not(.in) .trk-line, .tracks.rv:not(.in) .trk-line { stroke-dashoffset: 1; }
+.trk.rv:not(.in) .trk-b, .tracks.rv:not(.in) .trk-b { opacity: 0; }
+.trk.in .trk-line, .tracks.in .trk-line { transition: stroke-dashoffset 1.8s ease-in-out .25s; }
+.trk.in .trk-b, .tracks.in .trk-b { transition: opacity .3s ease 2s; }
+.trk-txt { display: flex; flex-direction: column; justify-content: center; gap: 3px; padding: 14px 20px; min-width: 0; }
+.trk-kind { font-size: 12px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--muted); }
+.trk-name { font-family: var(--serif); font-size: 21px; line-height: 1.2; }
+.trk-stats { font-size: 15px; color: var(--ink-soft); }
+.trk-stats b { color: var(--ink); }
+.trk-go { font-size: 14px; font-weight: 700; color: var(--forest); margin-top: 2px; }
+.trk > a:hover .trk-go { text-decoration: underline; }
+
+.tracks { margin: 56px 0 40px; padding: 30px 30px 26px; background: var(--paper-deep); position: relative; }
+.tracks::before { content: ""; position: absolute; inset: 8px; border: 1.5px dashed rgba(74, 67, 60, .28); pointer-events: none; }
+.tracks-head { position: relative; display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 10px 24px; margin-bottom: 18px; }
+.tracks-head .kicker { margin: 0 0 2px; flex-basis: 100%; }
+.prose .tracks-head h2 { margin: 0; font-size: 30px; }
+.tk-stats { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 15px; color: var(--ink-soft); }
+.tk-stats b { font-family: var(--serif); font-size: 26px; font-weight: 600; color: var(--trip, var(--forest)); margin-right: 3px; }
+.tracks .tk-map { position: relative; aspect-ratio: 16 / 10; min-height: 280px; border: 0; box-shadow: var(--shadow); }
+.prose .trk-list, .trk-list { position: relative; list-style: none; margin: 18px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.trk-list .trk { margin: 0; }
+.trk-list .trk > a { grid-template-columns: 96px 1fr; }
+.trk-list .trk-svg { width: 96px; min-height: 84px; }
+.trk-list .trk-name { font-size: 17px; }
+.trk-list .trk-txt { padding: 10px 14px; }
+.trk-list .trk-go { display: none; }
+.leaflet-interactive { cursor: pointer; }
+
+@media (max-width: 640px) {
+  .trk > a { grid-template-columns: 96px 1fr; }
+  .trk-svg { width: 96px; }
+  .trk-name { font-size: 18px; }
+  .tracks { margin-left: -16px; margin-right: -16px; padding: 24px 18px 20px; }
+  .tracks .tk-map { aspect-ratio: 4 / 5; }
+  .tk-stats b { font-size: 22px; }
+}

@@ -53,6 +53,10 @@ T = {
         "trip_stories": "Les récits du voyage", "trip_map": "L'itinéraire",
         "the_trip": "Le voyage", "prev": "← Récit précédent", "next": "Récit suivant →",
         "strava_title": "Trace du jour", "strava_go": "Voir sur Strava →",
+        "trk_velo": "À vélo", "trk_pied": "À pied", "tracks_title": "Les traces de ce récit", "tracks_n": "traces",
+        "tracks_kicker_velo": "Sur la route", "tracks_kicker_pied": "Sur le sentier", "tracks_kicker_mix": "Sur la route",
+        "moving_velo": "en selle", "moving_pied": "de marche", "moving_mix": "en mouvement",
+        "km_velo": "à vélo", "km_pied": "à pied", "km_mix": "parcourus",
         "read_min": "min de lecture", "back_trips": "← Tous les voyages",
         "book_of_trip": "Le livre du voyage", "book_cta": "Découvrir le livre",
         "books_page_lead": "Après chaque voyage, nous reprenons les récits et les plus belles photos pour en faire un livre. [Indiquer ici comment se procurer les livres : PDF, impression, Amazon…]",
@@ -87,6 +91,10 @@ T = {
         "trip_stories": "Stories from this journey", "trip_map": "The route",
         "the_trip": "The journey", "prev": "← Previous", "next": "Next →",
         "strava_title": "Route of the day", "strava_go": "View on Strava →",
+        "trk_velo": "By bike", "trk_pied": "On foot", "tracks_title": "The routes of this story", "tracks_n": "routes",
+        "tracks_kicker_velo": "On the road", "tracks_kicker_pied": "On the trail", "tracks_kicker_mix": "On the road",
+        "moving_velo": "in the saddle", "moving_pied": "walking", "moving_mix": "moving",
+        "km_velo": "by bike", "km_pied": "on foot", "km_mix": "covered",
         "read_min": "min read", "back_trips": "← All journeys",
         "book_of_trip": "The book of the journey", "book_cta": "See the book",
         "books_page_lead": "After each journey we gather the stories and the best photos into a book. [Explain here how to get the books: PDF, print, Amazon…]",
@@ -165,6 +173,7 @@ def load_posts():
             continue
         h = json.loads(m.group(1))
         h["body"] = raw[m.end():]
+        h["fstem"] = re.sub(r"^\d{4}-\d\d-\d\d-", "", os.path.basename(f)[:-5])
         h["dt"] = dt.datetime.fromisoformat(h["date"])
         h["words"] = len(text_of(h["body"]).split())
         h["excerpt"] = excerpt(h["body"])
@@ -231,8 +240,131 @@ def decode_polyline(s):
     return pts
 
 
+# ------------------------------------------------------------------ Strava
+def _load_strava():
+    path = os.path.join(ROOT, "data", "strava", "activities.json")
+    acts = {a["id"]: a for a in json.load(open(path, encoding="utf-8"))} if os.path.exists(path) else {}
+    mp = os.path.join(ROOT, "data", "strava", "posts.json")
+    mapping = json.load(open(mp, encoding="utf-8")) if os.path.exists(mp) else {}
+    return acts, mapping.get("posts", {}), mapping.get("trips", {})
+
+
+STRAVA, STRAVA_POSTS, STRAVA_TRIPS = _load_strava()
+TRACKS_VERSION = __import__("hashlib").md5(json.dumps(sorted(STRAVA)).encode()).hexdigest()[:8]
+
+
+def assign_strava(trips):
+    """Each story gets the activities embedded in it plus those listed in data/strava/posts.json."""
+    for t in trips:
+        ids = []
+        for p in t["posts"]:
+            own = re.findall(r'<div class="strava" data-activity="(\d+)"></div>', p["body"])
+            own += STRAVA_POSTS.get(p["fstem"], []) + STRAVA_POSTS.get(p["slug"], [])
+            p["acts"] = [STRAVA[i] for i in dict.fromkeys(own) if i in STRAVA]
+            ids += [a["id"] for a in p["acts"]]
+        ids += STRAVA_TRIPS.get(t["slug"], [])
+        t["acts"] = sorted((STRAVA[i] for i in dict.fromkeys(ids) if i in STRAVA), key=lambda a: a["date"])
+
+
+def tracks_url(t):
+    return f"/traces/{t['slug']}.json?v={TRACKS_VERSION}"
+
+
+def write_tracks(trips):
+    for t in trips:
+        if t["acts"]:
+            path = os.path.join(OUT, "traces", f"{t['slug']}.json")
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump([[a["id"], a["poly"]] for a in t["acts"]], f, separators=(",", ":"))
+
+
+def act_totals(acts):
+    return (sum(a["dist"] for a in acts) / 1000, sum(a["elev"] for a in acts), sum(a["time"] for a in acts))
+
+
+def fkm(km):
+    return f"{km:,.0f}".replace(",", "\u202f") if km >= 10 else f"{km:.1f}".replace(".", ",")
+
+
+def fdur(sec):
+    h, m = divmod(round(sec / 60), 60)
+    return f"{h} h {m:02d}" if h else f"{m} min"
+
+
+def act_kind(acts, lang):
+    rides = sum(1 for a in acts if "Ride" in a["type"])
+    if rides == len(acts):
+        return "velo"
+    return "pied" if rides == 0 else "mix"
+
+
+def mini_trace(a, color, w=132, h=92):
+    """Small inline SVG drawing of one activity, drawn with a stroke animation."""
+    pts = decode_polyline(a["poly"])
+    if len(pts) < 2:
+        return ""
+    step = max(1, len(pts) // 90)
+    pts = pts[::step] + [pts[-1]]
+    k = math.cos(math.radians(sum(p[0] for p in pts) / len(pts)))
+    xs = [p[1] * k for p in pts]
+    ys = [-p[0] for p in pts]
+    span = max(max(xs) - min(xs), max(ys) - min(ys), 1e-6)
+    pad = 10
+    sc = min((w - 2 * pad) / max(max(xs) - min(xs), span * 0.2), (h - 2 * pad) / max(max(ys) - min(ys), span * 0.2))
+    ox = (w - (max(xs) - min(xs)) * sc) / 2
+    oy = (h - (max(ys) - min(ys)) * sc) / 2
+    c = [((x - min(xs)) * sc + ox, (y - min(ys)) * sc + oy) for x, y in zip(xs, ys)]
+    d = "M" + " L".join(f"{x:.1f} {y:.1f}" for x, y in c)
+    (x0, y0), (x1, y1) = c[0], c[-1]
+    return (f'<svg class="trk-svg" viewBox="0 0 {w} {h}" width="{w}" height="{h}" aria-hidden="true">'
+            f'<path class="trk-bg" d="{d}"/><path class="trk-line" d="{d}" pathLength="1" stroke="{color}"/>'
+            f'<circle class="trk-a" cx="{x0:.1f}" cy="{y0:.1f}" r="3.5"/><circle class="trk-b" cx="{x1:.1f}" cy="{y1:.1f}" r="4" fill="{color}"/></svg>')
+
+
+def act_card(a, color, lang="fr", tag="div"):
+    t = T[lang]
+    d = dt.datetime.fromisoformat(a["date"])
+    kind = "velo" if "Ride" in a["type"] else "pied"
+    bits = [f"<b>{fkm(a['dist'] / 1000)}</b> km"]
+    if a["elev"] >= 15:
+        bits.append(f"<b>{a['elev']:,}</b> m D+".replace(",", "\u202f"))
+    if a["time"]:
+        bits.append(fdur(a["time"]))
+    name = a["name"].replace("->", "→").replace("➡️", "→").replace("➡", "→")
+    return (f'<{tag} class="trk" style="--trip:{color}">'
+            f'<a href="https://www.strava.com/activities/{a["id"]}" rel="noopener" aria-label="{esc(name)} ({t["strava_go"].rstrip(" →")})">'
+            f'{mini_trace(a, color)}<span class="trk-txt"><span class="trk-kind">{t["trk_" + kind]} · {esc(fdate(d, lang))}</span>'
+            f'<span class="trk-name">{esc(name)}</span><span class="trk-stats">{" · ".join(bits)}</span>'
+            f'<span class="trk-go">{t["strava_go"]}</span></span></a></{tag}>')
+
+
+def tracks_section(p, trip, lang="fr"):
+    acts = p.get("acts") or []
+    if not acts:
+        return ""
+    t = T[lang]
+    km, elev, sec = act_totals(acts)
+    kind = act_kind(acts, lang)
+    embedded = set(re.findall(r'data-activity="(\d+)"', p["body"]))
+    listed = [a for a in acts if a["id"] not in embedded]
+    stats = [f"<span><b>{fkm(km)}</b> km</span>"]
+    if elev >= 30:
+        stats.append(f"<span><b>{elev:,}</b> m D+</span>".replace(",", "\u202f"))
+    if sec:
+        stats.append(f"<span><b>{fdur(sec)}</b> {t['moving_' + kind]}</span>")
+    if len(acts) > 1:
+        stats.append(f"<span><b>{len(acts)}</b> {t['tracks_n']}</span>")
+    data = {"tracks": [{"src": tracks_url(trip), "color": trip["color"]}], "hl": [a["id"] for a in acts], "fit": "hl"}
+    lst = "".join(act_card(a, trip["color"], lang, "li") for a in listed)
+    return f"""<section class="tracks" id="traces" style="--trip:{trip['color']}"><div class="tracks-head">
+<p class="kicker">{t['tracks_kicker_' + kind]}</p><h2>{t['tracks_title']}</h2><div class="tk-stats">{"".join(stats)}</div></div>
+{map_div(data, "map tk-map", t['tracks_title'])}
+{f'<ol class="trk-list">{lst}</ol>' if lst else ''}</section>"""
+
+
 def trip_lines(t):
-    """Real GPS traces if data/traces/<name>.json exists, else a dashed line through the stories."""
+    """Fallback when no Strava trace exists: dashed line through the stories."""
     name = t.get("traces")
     path = os.path.join(ROOT, "data", "traces", f"{name}.json") if name else None
     if path and os.path.exists(path):
@@ -245,6 +377,18 @@ def trip_lines(t):
     if len(pts) > 1:
         return [{"points": pts, "color": t["color"], "weight": 2, "dash": "4 7"}]
     return []
+
+
+def trip_map_data(t, points, hl=None):
+    """Map data for a trip: real Strava traces when we have them, otherwise the fallback line."""
+    data = {"points": points}
+    if t.get("acts"):
+        data["tracks"] = [{"src": tracks_url(t), "color": t["color"]}]
+        if hl:
+            data["hl"] = hl
+    else:
+        data["lines"] = trip_lines(t)
+    return data
 
 
 # ------------------------------------------------------------------ helpers
@@ -360,7 +504,7 @@ def with_base(content):
     if not BASE:
         return content
     content = re.sub(r'((?:href|src|action)=")/(?!/)', lambda m: m.group(1) + BASE + "/", content)
-    return re.sub(r'(&quot;url&quot;:&quot;)/(?!/)', lambda m: m.group(1) + BASE + "/", content)
+    return re.sub(r'(&quot;(?:url|src)&quot;:&quot;)/(?!/)', lambda m: m.group(1) + BASE + "/", content)
 
 
 def write(path, content):
@@ -548,6 +692,21 @@ def page_trips(lang, trips):
     write(P["trips"], layout(lang, P["trips"], t["trips_page_title"], t["trips_page_lead"], body, other, active="trips"))
 
 
+def leg_km(p):
+    if not p.get("acts"):
+        return ""
+    return f' · {fkm(act_totals(p["acts"])[0])} km'
+
+
+def trip_km_chip(trip, lang):
+    acts = trip.get("acts") or []
+    if not acts:
+        return ""
+    km = act_totals(acts)[0]
+    kind = "velo" if trip.get("mode") == "velo" else act_kind(acts, lang)
+    return f'<span>{fkm(km)} km {T[lang]["km_" + kind]}</span>'
+
+
 def page_trip(lang, trip, books):
     t = T[lang]
     url = trip_url(trip, lang)
@@ -565,7 +724,7 @@ def page_trip(lang, trip, books):
         items += f"""<li class="leg {side}"><span class="pin" aria-hidden="true">{p['step']}</span>
 <a class="leg-card" href="{p['url']}" lang="fr"><figure class="snap">{img(p.get('cover'), p['title'], cls='', width=900)}
 <figcaption>{esc(fdate(p['dt'], lang))}</figcaption></figure>
-<div class="leg-txt"><span class="label ochre">{t['step']} {p['step']} {t['of']} {n}</span><h3>{esc(p['title'])}{note}</h3><p>{esc(p['excerpt'])}</p>
+<div class="leg-txt"><span class="label ochre">{t['step']} {p['step']} {t['of']} {n}{leg_km(p)}</span><h3>{esc(p['title'])}{note}</h3><p>{esc(p['excerpt'])}</p>
 <span class="go">{'Lire le récit →' if lang == 'fr' else 'Read the story (in French) →'}</span></div></a></li>"""
     pts = [{"lat": p["geo"][0], "lng": p["geo"][1], "title": p["title"], "url": p["url"],
             "label": f"{t['step']} {p['step']}", "color": trip["color"]} for p in trip["posts"] if p.get("geo")]
@@ -573,7 +732,7 @@ def page_trip(lang, trip, books):
     if pts:
         map_sec = f"""<section class="section band" style="padding:64px 0"><div class="wrap">
 <div class="sec-head"><div><p class="kicker">{t['trip_map']}</p></div></div>
-{map_div({"points": pts, "lines": trip_lines(trip)}, "map", t['trip_map'])}</div></section>"""
+{map_div(trip_map_data(trip, pts), "map", t['trip_map'])}</div></section>"""
     book = next((b for b in books if b["id"] == trip.get("book")), None)
     book_sec = ""
     if book:
@@ -585,7 +744,7 @@ def page_trip(lang, trip, books):
     body = f"""<section class="trip-hero">{img(trip.get('cover'), trip['title'][lang], cls='', width=1800, extra=' fetchpriority="high"')}{hero_decor(trip, lang)}
 <div class="wrap"><a class="crumbs" href="{PATHS[lang]['trips']}">{t['back_trips']}</a>
 <p class="kicker" style="margin-top:18px">{esc(trip['period'][lang])}</p><h1>{esc(trip['title'][lang])}</h1><p>{esc(trip['lead'][lang])}</p>
-<div class="chips"><span class="flag-chip">{trip_flags(trip, 18)}</span><span>{t['modes'][trip['mode']]}</span><span>{n} {t['stories'] if n > 1 else t['story']}</span></div></div></section>
+<div class="chips"><span class="flag-chip">{trip_flags(trip, 18)}</span><span>{t['modes'][trip['mode']]}</span><span>{n} {t['stories'] if n > 1 else t['story']}</span>{trip_km_chip(trip, lang)}</div></div></section>
 {map_sec}
 <section class="section"><div class="wrap"><div class="sec-head"><div><p class="kicker">{t['trip_stories']}</p></div></div>
 <ol class="route" style="--trip:{trip['color']}">{items}<li class="route-end" aria-hidden="true"><span>{'Fin du voyage' if lang == 'fr' else 'The end'}</span></li></ol></div></section>
@@ -599,7 +758,7 @@ STRAVA_ICON = '<svg class="ic" width="28" height="28" viewBox="0 0 24 24" fill="
 URL_BY_SLUG = {}
 
 
-def render_body(body, lang="fr"):
+def render_body(body, lang="fr", trip=None):
     t = T[lang]
 
     def fix_link(m):
@@ -612,6 +771,8 @@ def render_body(body, lang="fr"):
 
     def strava(m):
         aid = m.group(1)
+        if aid in STRAVA:
+            return act_card(STRAVA[aid], trip["color"] if trip else "#2F5D50", lang)
         return (f'<a class="strava-card" href="https://www.strava.com/activities/{aid}" rel="noopener">'
                 f'<span class="t">{STRAVA_ICON}<b>{t["strava_title"]}</b></span><span class="go">{t["strava_go"]}</span></a>')
     body = re.sub(r'<div class="strava" data-activity="(\d+)"></div>', strava, body)
@@ -636,6 +797,9 @@ def page_post(p, posts_by_trip):
         i = p["step"] - 1
         crumbs = f'<a class="crumbs" href="{trip_url(trip, lang)}">← {esc(trip["title"][lang])} · {t["step"].lower()} {p["step"]} {t["of"]} {len(tp)}</a>'
         chips = f"<span>{esc(trip['title'][lang])}</span>" + chips
+        if p.get("acts"):
+            km = act_totals(p["acts"])[0]
+            chips += f'<a class="km-chip" href="#traces">{motif_svg("velo" if act_kind(p["acts"], lang) != "pied" else "pied", 18, "currentColor", 1.8)}{fkm(km)} km</a>'
         lis = "".join(
             f'<a href="{q["url"]}"{" aria-current=\"page\" style=\"font-weight:700;color:var(--ink)\"" if q is p else ""}>{q["step"]}. {esc(q["title"])}</a>'
             for q in tp) if len(tp) <= 40 else ""
@@ -643,7 +807,7 @@ def page_post(p, posts_by_trip):
         if p.get("geo"):
             pts = [{"lat": q["geo"][0], "lng": q["geo"][1], "title": q["title"], "url": q["url"], "color": trip["color"] if q is not p else "#B5483B",
                     "r": 5 if q is not p else 8} for q in tp if q.get("geo")]
-            mini = map_div({"points": pts, "lines": trip_lines(trip)}, "map", t["trip_map"]).replace('class="map"', 'class="map" style="aspect-ratio:auto;height:240px;min-height:0"')
+            mini = map_div(trip_map_data(trip, pts, [a["id"] for a in p.get("acts", [])]), "map", t["trip_map"]).replace('class="map"', 'class="map" style="aspect-ratio:auto;height:240px;min-height:0"')
         aside = f"""<aside class="post-aside"><div class="aside-card"><span class="aside-stamp">{stamp_svg(trip, lang, 96)}</span><span class="kicker">{t['the_trip']}</span>
 <a href="{trip_url(trip, lang)}" style="font-family:var(--serif);font-size:22px;text-decoration:none;color:var(--ink)">{esc(trip['title'][lang])}</a>
 <span class="label">{esc(trip['period'][lang])}</span>{mini}<nav aria-label="{esc(t['trip_stories'])}">{lis}</nav></div></aside>"""
@@ -668,7 +832,7 @@ def page_post(p, posts_by_trip):
         cover = f'<div class="wrap post-cover"><div class="cover-frame">{img(p["cover"], p["title"], cls="", width=1800, extra=" fetchpriority=\"high\"")}{post_decor(trip, "fr")[0]}</div></div>'
     body = f"""{post_decor(trip, "fr")[1]}<section class="wrap post-head">{crumbs}<h1>{esc(p['title'])}</h1><div class="meta">{chips}</div></section>
 {cover}
-<div class="wrap post-wrap">{aside}<article class="prose">{prev_html}{render_body(p['body'])}{nav}</article></div>"""
+<div class="wrap post-wrap">{aside}<article class="prose">{prev_html}{render_body(p['body'], trip=trip)}{tracks_section(p, trip) if trip else ""}{nav}</article></div>"""
     alt = trip_url(trip, "en") if trip else PATHS["en"]["home"]
     write(p["url"], layout(lang, p["url"], p["title"], p.get("description") or p["excerpt"], body, alt, image=p.get("cover"), active="trips"))
 
@@ -676,13 +840,16 @@ def page_post(p, posts_by_trip):
 def page_map(lang, trips):
     t = T[lang]
     P = PATHS[lang]
-    lines = []
+    lines, tracks = [], []
     for x in trips:
-        lines += trip_lines(x)
+        if x.get("acts"):
+            tracks.append({"src": tracks_url(x), "color": x["color"]})
+        else:
+            lines += trip_lines(x)
     legend = "".join(f'<a href="{trip_url(x, lang)}" style="color:var(--ink);text-decoration:none"><i style="background:{x["color"]}"></i>{trip_flags(x, 12)} {esc(x["title"][lang])}</a>' for x in trips)
     body = f"""<section class="wrap post-head"><p class="kicker">{t['map_kicker']}</p><h1>{t['map_page_title']}</h1>
 <p style="margin:0;font-size:19px;color:var(--ink-soft)">{t['map_aside']}</p></section>
-<div class="wrap">{map_div({"points": all_points(trips, lang), "lines": lines}, "map tall", t['map_page_title'])}
+<div class="wrap">{map_div({"points": all_points(trips, lang), "lines": lines, "tracks": tracks, "fit": "points"}, "map tall", t['map_page_title'])}
 <div class="map-legend">{legend}</div></div><div style="height:96px"></div>"""
     other = PATHS["en" if lang == "fr" else "fr"]["map"]
     write(P["map"], layout(lang, P["map"], t["map_page_title"], t["map_title"], body, other, active="map"))
@@ -800,6 +967,7 @@ def main():
     posts = load_posts()
     trips, leftovers = assign_trips(posts, json.load(open(os.path.join(ROOT, "data", "trips.json"), encoding="utf-8")))
     books = json.load(open(os.path.join(ROOT, "data", "books.json"), encoding="utf-8"))
+    assign_strava(trips)
     for p in posts:
         URL_BY_SLUG[p["url"].rstrip("/").split("/")[-1]] = p["url"]
     for lang in ("fr", "en"):
@@ -823,6 +991,7 @@ def main():
         shutil.copytree(os.path.join(ROOT, "media"), os.path.join(OUT, "media"))
     if os.path.exists(os.path.join(ROOT, "CNAME")):
         shutil.copy(os.path.join(ROOT, "CNAME"), os.path.join(OUT, "CNAME"))
+    write_tracks(trips)
     open(os.path.join(OUT, ".nojekyll"), "w").close()
     print(f"Site construit : {len(posts)} récits, {len(trips)} voyages"
           + (f", {len(leftovers)} récits hors voyage : " + ", ".join(p['slug'] for p in leftovers) if leftovers else ""))
