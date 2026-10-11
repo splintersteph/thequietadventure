@@ -36,10 +36,18 @@ def shrink(path, max_side=1600):
     """Resize big originals so the repository stays light."""
     try:
         from PIL import Image, ImageOps
+        Image.MAX_IMAGE_PIXELS = None
     except ImportError:
         return
+    try:
+        _shrink(path, max_side, Image, ImageOps)
+    except Exception as e:  # noqa: BLE001
+        print("  redimensionnement impossible :", path, e)
+
+
+def _shrink(path, max_side, Image, ImageOps):
     with Image.open(path) as im:
-        if max(im.size) <= max_side and os.path.getsize(path) < 600_000:
+        if max(im.size) <= max_side:
             return
         im = ImageOps.exif_transpose(im)
         im.thumbnail((max_side, max_side))
@@ -50,6 +58,13 @@ def shrink(path, max_side=1600):
 
 
 def fetch(item):
+    try:
+        return _fetch(item)
+    except Exception as e:  # noqa: BLE001
+        return item[0], "FAIL " + repr(e)
+
+
+def _fetch(item):
     local, src = item
     dest = os.path.join(ROOT, local)
     if os.path.exists(dest):
@@ -73,12 +88,14 @@ def fetch(item):
                     os.replace(tmp, dest)
                 return local, "new"
             except Exception as e:  # noqa: BLE001
-                err = str(e)
+                err = repr(e)
         time.sleep(2 * (attempt + 1))
     return local, "FAIL " + err
 
 
+
 def main():
+    err = ""
     manifest = json.load(open(os.path.join(ROOT, "data", "media-manifest.json"), encoding="utf-8"))
     # files from an earlier run that no story uses any more
     for dirpath, _, files in os.walk(os.path.join(ROOT, "media")):
