@@ -18,19 +18,23 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Installer ffmpeg
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: Installer ffmpeg et Pillow
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg && pip install -q pillow
       - name: Télécharger photos et vidéos
         run: python tools/fetch_media.py
       - name: Enregistrer dans le dépôt
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898281+github-actions[bot]@users.noreply.github.com"
-          # un commit par mois, pour garder des envois de taille raisonnable
           find media -type f -size +95M -print -delete
-          for d in media/*/*/ ; do
-            git add "$d"
-            git diff --cached --quiet || { git commit -q -m "Médias : ${d#media/}"; git push -q || { sleep 20; git push -q; }; }
+          # envoi par lots de 150 fichiers pour éviter les envois trop lourds
+          git ls-files --others --modified --deleted --exclude-standard media > /tmp/changes.txt || true
+          split -l 150 /tmp/changes.txt /tmp/lot_
+          for f in /tmp/lot_*; do
+            [ -s "$f" ] || continue
+            xargs -a "$f" -d '\n' git add -A --
+            git commit -q -m "Médias ($(wc -l < "$f") fichiers)"
+            git push -q || { sleep 20; git pull -q --rebase; git push -q; }
           done
           git add data/media-missing.txt
           git diff --cached --quiet || { git commit -q -m "Liste des médias manquants"; git push -q; }

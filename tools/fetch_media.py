@@ -32,18 +32,39 @@ def get(url, dest):
     os.replace(dest + ".part", dest)
 
 
+def shrink(path, max_side=1600):
+    """Resize big originals so the repository stays light."""
+    try:
+        from PIL import Image, ImageOps
+    except ImportError:
+        return
+    with Image.open(path) as im:
+        if max(im.size) <= max_side and os.path.getsize(path) < 600_000:
+            return
+        im = ImageOps.exif_transpose(im)
+        im.thumbnail((max_side, max_side))
+        if path.lower().endswith((".jpg", ".jpeg")):
+            im.convert("RGB").save(path, quality=80, optimize=True, progressive=True)
+        else:
+            im.save(path, optimize=True)
+
+
 def fetch(item):
     local, src = item
     dest = os.path.join(ROOT, local)
     if os.path.exists(dest):
+        if not local.lower().endswith((".mp4", ".mov", ".webm")):
+            shrink(dest)
         return local, "ok"
     os.makedirs(os.path.dirname(dest), exist_ok=True)
     is_video = local.lower().endswith((".mp4", ".mov", ".webm"))
-    urls = [ORIGIN + src] if is_video else [CDN + src + "?w=1600&quality=80&strip=info", ORIGIN + src]
+    urls = [ORIGIN + src] if is_video else [ORIGIN + src, CDN + src + "?w=1600&quality=80&strip=info"]
     for attempt in range(3):
         for url in urls:
             try:
                 get(url, dest)
+                if not is_video:
+                    shrink(dest)
                 if is_video and shutil.which("ffmpeg"):
                     tmp = dest + ".720.mp4"
                     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", dest, "-vf", "scale='min(1280,iw)':-2",
@@ -59,6 +80,12 @@ def fetch(item):
 
 def main():
     manifest = json.load(open(os.path.join(ROOT, "data", "media-manifest.json"), encoding="utf-8"))
+    # files from an earlier run that no story uses any more
+    for dirpath, _, files in os.walk(os.path.join(ROOT, "media")):
+        for fn in files:
+            rel = os.path.relpath(os.path.join(dirpath, fn), ROOT).replace(os.sep, "/")
+            if rel not in manifest:
+                os.remove(os.path.join(dirpath, fn))
     todo = list(manifest.items())
     print(f"{len(todo)} médias à vérifier")
     fails, new = [], 0

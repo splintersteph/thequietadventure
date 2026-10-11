@@ -32,8 +32,23 @@ def slugify(s):
     return s[:80].strip("-") or "recit"
 
 
+ATTACH = {}  # normalised file name -> upload path of the real attachment
+
+
+def media_key(path):
+    name = path.rsplit("/", 1)[-1].lower()
+    stem, _, ext = name.rpartition(".")
+    stem = re.sub(r"^[0-9a-f]{5}-", "", stem)
+    for _ in range(3):
+        stem = re.sub(r"(-\d+x\d+|-rotated|-scaled|-e\d{10,}|-\d)$", "", stem)
+    return stem + "." + ext
+
+
 def local_media(url):
-    """Map a WordPress upload URL to /media/<path>; register it for fetching."""
+    """Map a WordPress upload URL to /media/<path>; register it for fetching.
+
+    Older stories point to resized copies that no longer exist (…-768x1024.jpg);
+    they are redirected to the original attachment with the same file name."""
     if not url:
         return None
     url = html.unescape(url)
@@ -41,6 +56,8 @@ def local_media(url):
     if not m:
         return url if url.startswith("http") else None
     path = m.group(1)
+    if not path.lower().endswith((".mp4", ".mov", ".webm")):
+        path = ATTACH.get(media_key(path), path)
     MEDIA["media/" + path] = "wp-content/uploads/" + path
     return "/media/" + path
 
@@ -227,7 +244,11 @@ def main(xml_path):
     attachments = {}
     for i in items:
         if i.find("wp:post_type", NS).text == "attachment":
-            attachments[i.find("wp:post_id", NS).text] = i.find("wp:attachment_url", NS).text
+            url = i.find("wp:attachment_url", NS).text
+            attachments[i.find("wp:post_id", NS).text] = url
+            m = UPLOAD_RE.search(url or "")
+            if m:
+                ATTACH.setdefault(media_key(m.group(1)), m.group(1))
 
     out_dir = os.path.join(ROOT, "content", "posts")
     os.makedirs(out_dir, exist_ok=True)
