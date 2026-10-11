@@ -403,6 +403,27 @@ def story_card(p, lang="fr"):
 <span class="label">{post_flags(p, 13)} {esc(lbl)}</span><h3>{esc(p['title'])}{note}</h3><p>{esc(p['excerpt'])}</p></a>"""
 
 
+def latest_section(trip, latest, lang):
+    t = T[lang]
+    tiles = ""
+    for i, p in enumerate(latest):
+        note = ' <span class="lang-note">FR</span>' if lang == "en" else ""
+        tiles += f"""<a class="lt lt{i}" href="{p['url']}" lang="fr">{img(p.get('cover'), p['title'], cls='bg', width=1400 if i == 0 else 800)}
+<span class="lt-shade"></span><span class="lt-pin">{p['step']}</span>
+<span class="lt-body"><span class="lt-meta">{post_flags(p, 15)} {esc(fdate(p['dt'], lang))}</span>
+<span class="lt-title">{esc(p['title'])}{note}</span>{f'<span class="lt-ex">{esc(p["excerpt"])}</span>' if i == 0 else ''}
+<span class="lt-go">{'Lire le récit' if lang == 'fr' else 'Read the story'} <b aria-hidden="true">→</b></span></span></a>"""
+    n = len(trip["posts"])
+    return f"""<section class="latest" style="--trip:{trip['color']}"><div class="wrap">
+<div class="latest-head"><div><p class="kicker">{t['latest_kicker']}</p><h2 class="h-sec">{esc(trip['title'][lang])}</h2>
+<p class="latest-lead">{esc(trip['lead'][lang])}</p>
+<div class="latest-meta"><span class="flag-chip">{trip_flags(trip, 18)}</span><span>{esc(trip['period'][lang])}</span><span>{n} {t['stories']}</span></div></div>
+<a class="latest-stamp" href="{trip_url(trip, lang)}" aria-label="{esc(t['whole_trip'])}">{stamp_svg(trip, lang, 150)}</a></div>
+<div class="latest-grid">{tiles}</div>
+<div class="latest-foot"><a class="btn light" href="{trip_url(trip, lang)}">{t['whole_trip']}</a></div>
+</div></section>"""
+
+
 def book_card(b, lang):
     href = f"{PATHS[lang]['books']}#{b['id']}"
     return f"""<a class="book" href="{href}">
@@ -462,11 +483,7 @@ def page_home(lang, posts, trips, books):
 </figure>
 </div></section>
 
-<section class="section band"><div class="wrap">
-<div class="sec-head"><div><p class="kicker">{t['latest_kicker']}</p><h2 class="h-sec">{esc(latest_trip['title'][lang])}</h2></div>
-<a href="{trip_url(latest_trip, lang)}" style="font-weight:700">{t['whole_trip']}</a></div>
-<div class="grid3">{''.join(story_card(p, lang) for p in latest)}</div>
-</div></section>
+{latest_section(latest_trip, latest, lang)}
 
 <section class="section" id="voyages"><div class="wrap">
 <div class="sec-head"><div><p class="kicker">{t['trips_kicker']}</p><h2 class="h-sec">{t['trips_title']}</h2></div>
