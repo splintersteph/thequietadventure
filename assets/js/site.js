@@ -83,3 +83,34 @@
     else map.setView([30, 10], 2);
   }
 })();
+
+// Filtres de la page « Voyages »
+(function () {
+  var grid = document.getElementById("trip-grid");
+  if (!grid) return;
+  var chips = Array.prototype.slice.call(document.querySelectorAll(".chip[data-filter]"));
+  var cards = Array.prototype.slice.call(grid.querySelectorAll(".card"));
+  var count = document.querySelector(".filter-count");
+  var empty = document.querySelector(".filter-empty");
+  function apply(key) {
+    var n = 0;
+    cards.forEach(function (c) {
+      var ok = !key || (" " + c.getAttribute("data-cats") + " ").indexOf(" " + key + " ") > -1;
+      c.hidden = !ok;
+      if (ok) n++;
+    });
+    chips.forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-filter") === key ? "true" : "false"); });
+    if (count) count.textContent = n + " " + count.getAttribute("data-word");
+    if (empty) empty.hidden = n > 0;
+  }
+  chips.forEach(function (b) {
+    b.addEventListener("click", function () {
+      var key = b.getAttribute("data-filter");
+      history.replaceState(null, "", key ? "#" + key : location.pathname);
+      apply(key);
+    });
+  });
+  function fromHash() { apply(decodeURIComponent(location.hash.slice(1))); }
+  window.addEventListener("hashchange", fromHash);
+  fromHash();
+})();

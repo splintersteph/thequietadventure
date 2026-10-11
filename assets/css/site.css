@@ -242,3 +242,25 @@ a:hover { color: var(--forest-deep); }
 
 /* fond de carte aux tons du carnet */
 .leaflet-tile-pane { filter: sepia(.28) saturate(.85) brightness(1.02); }
+
+/* ---------- Filtres des voyages ---------- */
+.filters { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px; padding: 18px 0 8px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); margin-bottom: 18px; }
+.fgroup { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.fgroup .label { margin-right: 4px; }
+.chip { min-height: 40px; padding: 0 16px; border: 1.5px solid var(--ink); border-radius: 999px; background: transparent; color: var(--ink); font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; }
+.chip small { color: var(--muted); font-size: 13px; margin-left: 2px; }
+.chip:hover { background: var(--paper-deep); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.chip[aria-pressed="true"] small { color: #CFC4B4; }
+.filter-count { margin: 0 0 22px; }
+.filter-empty { margin: 24px 0 0; color: var(--ink-soft); }
+.card[hidden] { display: none; }
+
+/* ---------- Menu déroulant « Voyages » ---------- */
+.dd { position: relative; display: inline-flex; }
+.dd-menu { display: none; position: absolute; top: 100%; left: -16px; z-index: 50; min-width: 200px; padding: 10px 0; background: var(--card); box-shadow: 0 12px 30px rgba(60, 45, 30, .18); flex-direction: column; }
+.dd-menu a { padding: 7px 18px; font-weight: 500; }
+.dd-menu a:hover { background: var(--paper-deep); text-decoration: none; }
+.dd-menu hr { border: 0; border-top: 1px solid var(--line); margin: 6px 0; }
+.dd:hover .dd-menu, .dd:focus-within .dd-menu { display: flex; }
+@media (max-width: 760px) { .dd-menu { display: none !important; } }

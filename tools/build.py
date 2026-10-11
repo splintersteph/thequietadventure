@@ -99,6 +99,25 @@ MONTHS = {"fr": ["janvier", "février", "mars", "avril", "mai", "juin", "juillet
           "en": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]}
 COUNTRY_CATS = {"australia", "china", "new-zealand", "usa", "canada", "japan", "indonesie", "philippines", "sri-lanka", "colombia",
                 "south-korea", "croatie", "slovenie", "italie", "montenegro", "suisse", "france"}
+REGIONS = {
+    "coree-a-velo": ["asie"], "kyushu-a-velo": ["asie"], "japon-2018": ["asie"], "bali": ["asie"],
+    "retour-en-europe-a-velo": ["europe"], "suisse-en-train": ["europe"],
+    "belle-via-et-vercors": ["france"], "gorges-du-tarn-a-velo": ["france"], "passa-pais": ["france"],
+    "toulouse-bordeaux-a-velo": ["france"], "echappees-a-velo-en-france": ["france"],
+    "australie": ["oceanie"], "nouvelle-zelande": ["oceanie"],
+    "ouest-americain": ["amerique"], "quebec": ["amerique"], "canada-2020": ["amerique"], "colombie": ["amerique"],
+    "escapades": ["asie", "europe"],
+}
+REGION_NAMES = {
+    "fr": {"france": "France", "europe": "Europe", "asie": "Asie", "oceanie": "Océanie", "amerique": "Amériques"},
+    "en": {"france": "France", "europe": "Europe", "asie": "Asia", "oceanie": "Oceania", "amerique": "Americas"},
+}
+MODE_ORDER = ["velo", "train", "roadtrip", "expat"]
+REGION_ORDER = ["france", "europe", "asie", "oceanie", "amerique"]
+FILTER_TXT = {
+    "fr": {"all": "Tous", "how": "Façon de voyager", "where": "Région", "none": "Aucun voyage ne correspond à ce filtre.", "count": "voyages"},
+    "en": {"all": "All", "how": "How we travelled", "where": "Region", "none": "No journey matches this filter.", "count": "journeys"},
+}
 PATHS = {
     "fr": {"home": "/", "trips": "/voyages/", "map": "/carte/", "books": "/livres/", "about": "/a-propos/", "archive": "/archives/"},
     "en": {"home": "/en/", "trips": "/en/journeys/", "map": "/en/map/", "books": "/en/books/", "about": "/en/about/", "archive": "/en/archive/"},
@@ -295,7 +314,9 @@ def layout(lang, path, title, desc, content, alt_path=None, image=None, active=N
 <a class="brand" href="{P['home']}"><b>The Quiet Adventure</b><span>{t['tagline']}</span></a>
 <button class="menu-btn" type="button" aria-expanded="false" aria-controls="nav">{t['menu']}</button>
 <nav id="nav" class="nav" aria-label="Navigation principale">
-{nav_link('trips', t['nav_trips'])}
+<div class="dd">{nav_link('trips', t['nav_trips'])}<div class="dd-menu">
+{''.join(f'<a href="{P["trips"]}#{m}">{t["modes"][m]}</a>' for m in MODE_ORDER)}<hr>
+{''.join(f'<a href="{P["trips"]}#{r}">{REGION_NAMES[lang][r]}</a>' for r in REGION_ORDER)}</div></div>
 {nav_link('map', t['nav_map'])}
 {nav_link('books', t['nav_books'])}
 {nav_link('about', t['nav_about'])}
@@ -361,7 +382,8 @@ def redirect(path, target):
 def trip_card(t, lang):
     n = len(t["posts"])
     lbl = f"{t['period'][lang]} · {T[lang]['modes'][t['mode']].lower()}"
-    return f"""<a class="card" href="{trip_url(t, lang)}">
+    cats = " ".join([t["mode"]] + REGIONS.get(t["slug"], []))
+    return f"""<a class="card" href="{trip_url(t, lang)}" data-cats="{cats}">
 {img(t.get('cover'), t['title'][lang], width=900)}
 <div class="body"><span class="label ochre">{esc(lbl)}</span><h3>{esc(t['title'][lang])}</h3>
 <p>{esc(t['lead'][lang])}</p><span class="label">{n} {T[lang]['stories'] if n > 1 else T[lang]['story']}</span></div></a>"""
@@ -484,19 +506,24 @@ def page_home(lang, posts, trips, books):
 def page_trips(lang, trips):
     t = T[lang]
     P = PATHS[lang]
-    groups = {}
-    for x in sorted(trips, key=lambda x: x["end"], reverse=True):
-        groups.setdefault(x["mode"], []).append(x)
-    order = ["velo", "train", "roadtrip", "expat"]
-    secs = ""
-    for mode in order:
-        if mode not in groups:
-            continue
-        secs += f"""<section class="section" style="padding-top:24px"><div class="wrap">
-<div class="sec-head"><div><p class="kicker">{t['modes'][mode]}</p></div></div>
-<div class="grid3">{''.join(trip_card(x, lang) for x in groups[mode])}</div></div></section>"""
+    ft = FILTER_TXT[lang]
+    ordered = sorted(trips, key=lambda x: x["end"], reverse=True)
+    modes = [m for m in MODE_ORDER if any(x["mode"] == m for x in trips)]
+
+    def chip(key, label, n):
+        return f'<button type="button" class="chip" data-filter="{key}" aria-pressed="false">{esc(label)} <small>{n}</small></button>'
+    how = "".join(chip(m, t["modes"][m], sum(x["mode"] == m for x in trips)) for m in modes)
+    where = "".join(chip(r, REGION_NAMES[lang][r], sum(r in REGIONS.get(x["slug"], []) for x in trips)) for r in REGION_ORDER)
+    bar = f"""<div class="filters" role="group" aria-label="{esc(ft['how'])} / {esc(ft['where'])}">
+<button type="button" class="chip" data-filter="" aria-pressed="true">{ft['all']} <small>{len(trips)}</small></button>
+<span class="fgroup"><span class="label">{ft['how']}</span>{how}</span>
+<span class="fgroup"><span class="label">{ft['where']}</span>{where}</span></div>"""
     body = f"""<section class="wrap post-head"><p class="kicker">{t['trips_kicker']}</p><h1>{t['trips_page_title']}</h1>
-<p style="margin:0;font-size:19px;color:var(--ink-soft);max-width:680px">{t['trips_page_lead']}</p></section>{secs}"""
+<p style="margin:0;font-size:19px;color:var(--ink-soft);max-width:680px">{t['trips_page_lead']}</p></section>
+<section class="section" style="padding-top:8px"><div class="wrap">{bar}
+<p class="filter-count label" aria-live="polite" data-word="{ft['count']}"></p>
+<div class="grid3" id="trip-grid">{''.join(trip_card(x, lang) for x in ordered)}</div>
+<p class="filter-empty" hidden>{ft['none']}</p></div></section>"""
     other = PATHS["en" if lang == "fr" else "fr"]["trips"]
     write(P["trips"], layout(lang, P["trips"], t["trips_page_title"], t["trips_page_lead"], body, other, active="trips"))
 
