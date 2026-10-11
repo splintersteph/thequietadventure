@@ -120,7 +120,7 @@ a:hover { color: var(--forest-deep); }
 
 /* ---------- Trip page ---------- */
 .trip-hero { position: relative; min-height: 460px; display: flex; align-items: flex-end; color: #FFFDF8; }
-.trip-hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.trip-hero > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .trip-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(28, 22, 16, .78), rgba(28, 22, 16, .15) 60%, rgba(28, 22, 16, 0)); }
 .trip-hero .wrap { position: relative; z-index: 1; padding-top: 120px; padding-bottom: 48px; width: 100%; }
 .trip-hero h1 { margin: 6px 0 12px; font-family: var(--serif); font-weight: 400; font-size: clamp(40px, 6vw, 72px); line-height: 1.02; letter-spacing: -1.5px; }
@@ -370,3 +370,21 @@ a:hover { color: var(--forest-deep); }
   .prose .rv, .prose .gallery.rv img { opacity: 1 !important; translate: none !important; transform: none !important; transition: none !important; }
   .read-route .rider svg { animation: none; }
 }
+
+/* ---------- Drapeaux ---------- */
+.flag { display: inline-block; vertical-align: -2px; border-radius: 2px; box-shadow: 0 0 0 1px rgba(42, 37, 33, .15); object-fit: cover; }
+.flags { display: flex; gap: 6px; margin-bottom: 2px; }
+.flag-chip { display: inline-flex; gap: 6px; align-items: center; padding: 5px 12px !important; }
+.trip-hero .flag-chip .flag { box-shadow: 0 0 0 1px rgba(255, 255, 255, .5); }
+.story .label .flag { margin-right: 2px; }
+.map-legend .flag { vertical-align: -1px; }
+
+/* Guirlande de drapeaux en haut des voyages */
+.bunting { position: absolute; z-index: 2; top: -4px; left: 0; right: 0; margin: 0; padding: 0 2%; list-style: none; display: flex; justify-content: space-between; pointer-events: none; }
+.bunting::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 40px; border-bottom: 2px solid rgba(255, 253, 248, .7); border-radius: 0 0 50% 50% / 0 0 100% 100%; }
+.bunting li { position: relative; top: var(--y); transform-origin: 50% 0; animation: flap 2.4s ease-in-out calc(var(--i) * -.35s) infinite alternate; }
+.bunting img { display: block; width: 46px; height: 34px; object-fit: cover; border-radius: 2px; box-shadow: 0 4px 10px rgba(0, 0, 0, .3); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%); }
+@keyframes flap { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+@media (max-width: 640px) { .bunting li:nth-child(odd) { display: none; } .bunting img { width: 34px; height: 25px; } }
+@media (prefers-reduced-motion: reduce) { .bunting li { animation: none; } }
+.trip-hero .wrap { padding-top: 150px; }

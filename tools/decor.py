@@ -105,7 +105,15 @@ def hero_decor(trip, lang):
     """Stamp, a traveller crossing the bottom of the hero, and ambient particles."""
     motif, particles, _ = DECOR.get(trip["slug"], ("compass", None, {}))
     mode = trip.get("mode", "velo")
-    out = f'<div class="hero-stamp">{stamp_svg(trip, lang, 150)}</div>'
+    codes = TRIP_FLAGS.get(trip["slug"], [])
+    out = ""
+    if codes:
+        n = 14
+        items = "".join(
+            f'<li style="--i:{i};--y:{round(18 * (1 - ((i - (n - 1) / 2) / ((n - 1) / 2)) ** 2))}px">'
+            f'<img src="{FLAG_CDN}{codes[i % len(codes)]}.svg" alt=""></li>' for i in range(n))
+        out += f'<ul class="bunting" aria-hidden="true">{items}</ul>'
+    out += f'<div class="hero-stamp">{stamp_svg(trip, lang, 150)}</div>'
     out += (f'<div class="hero-route" aria-hidden="true"><span class="traveller">'
             f'{motif_svg(mode, 34, "#FFFDF8", 2.4)}</span></div>')
     if particles == "heat":
@@ -133,3 +141,36 @@ def post_decor(trip, lang):
                 f'<span class="rider">{motif_svg(mode, 30, color, 2.6)}</span>'
                 f'<span class="read-goal">{motif_svg(motif, 26, color, 2.4)}</span></div>')
     return cover, progress
+
+
+TRIP_FLAGS = {
+    "coree-a-velo": ["kr"], "kyushu-a-velo": ["jp"], "retour-en-europe-a-velo": ["hr", "si", "it"],
+    "suisse-en-train": ["ch"], "belle-via-et-vercors": ["fr"], "gorges-du-tarn-a-velo": ["fr"], "passa-pais": ["fr"],
+    "toulouse-bordeaux-a-velo": ["fr"], "echappees-a-velo-en-france": ["fr"], "australie": ["au"], "bali": ["id"],
+    "nouvelle-zelande": ["nz"], "ouest-americain": ["us"], "japon-2018": ["jp"], "quebec": ["ca"], "canada-2020": ["ca"],
+    "colombie": ["co"], "escapades": ["lk", "ph", "me"],
+}
+CAT_FLAGS = {
+    "south-korea": "kr", "japan": "jp", "croatie": "hr", "slovenie": "si", "italie": "it", "suisse": "ch", "france": "fr",
+    "australia": "au", "china": "cn", "indonesie": "id", "new-zealand": "nz", "usa": "us", "canada": "ca",
+    "colombia": "co", "sri-lanka": "lk", "philippines": "ph", "montenegro": "me",
+}
+FLAG_CDN = "/assets/img/flags/"
+
+
+def flags_html(codes, h=16):
+    w = round(h * 4 / 3)
+    return "".join(f'<img class="flag" src="{FLAG_CDN}{c}.svg" width="{w}" height="{h}" alt="" loading="lazy">' for c in codes)
+
+
+def trip_flags(trip, h=16):
+    return flags_html(TRIP_FLAGS.get(trip["slug"], []), h)
+
+
+def post_flags(post, h=16):
+    codes = []
+    for c in post.get("categories", []):
+        f = CAT_FLAGS.get(c)
+        if f and f not in codes:
+            codes.append(f)
+    return flags_html(codes, h)
