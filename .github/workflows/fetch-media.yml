@@ -26,9 +26,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898281+github-actions[bot]@users.noreply.github.com"
-          for d in media/*/ ; do
+          # un commit par mois, pour garder des envois de taille raisonnable
+          find media -type f -size +95M -print -delete
+          for d in media/*/*/ ; do
             git add "$d"
-            git diff --cached --quiet || { git commit -q -m "Médias : ${d#media/}"; git push -q; }
+            git diff --cached --quiet || { git commit -q -m "Médias : ${d#media/}"; git push -q || { sleep 20; git push -q; }; }
           done
           git add data/media-missing.txt
           git diff --cached --quiet || { git commit -q -m "Liste des médias manquants"; git push -q; }
