@@ -12,7 +12,7 @@
   }
 
   // Lightbox for article photos
-  var imgs = Array.prototype.slice.call(document.querySelectorAll(".prose img:not(.post-nav2 img)"));
+  var imgs = Array.prototype.slice.call(document.querySelectorAll(".prose img:not(.post-nav2 img):not(.pv img)"));
   if (imgs.length) {
     var lb = document.createElement("div");
     lb.className = "lb";

@@ -630,6 +630,7 @@ def page_post(p, posts_by_trip):
     crumbs = ""
     aside = ""
     nav = ""
+    prev_html = ""
     if trip:
         tp = trip["posts"]
         i = p["step"] - 1
@@ -659,15 +660,15 @@ def page_post(p, posts_by_trip):
             nav += f"""<a class="nx end" href="{trip_url(trip, lang)}"><span class="shade"></span><span class="nx-top"><span class="nx-kicker">{'Fin du voyage' if lang == 'fr' else 'End of the journey'}</span></span>
 <span class="nx-title">{'Revoir tout le voyage' if lang == 'fr' else 'See the whole journey'} : {esc(trip['title'][lang])}</span>
 <span class="nx-road" aria-hidden="true"><span class="nx-rider">{mode_icon}</span><span class="nx-arrow">→</span></span></a>"""
-        if prev_p:
-            nav += f"""<a class="pv" href="{prev_p['url']}">{img(prev_p.get('cover'), '', cls='', width=500)}<span><span class="label">{t['prev']}</span><b>{esc(prev_p['title'])}</b></span></a>"""
         nav += "</nav>"
+        if prev_p:
+            prev_html = f"""<a class="pv" href="{prev_p['url']}">{img(prev_p.get('cover'), '', cls='', width=500)}<span><span class="label">{t['prev']}</span><b>{esc(prev_p['title'])}</b></span></a>"""
     cover = ""
     if p.get("cover"):
         cover = f'<div class="wrap post-cover"><div class="cover-frame">{img(p["cover"], p["title"], cls="", width=1800, extra=" fetchpriority=\"high\"")}{post_decor(trip, "fr")[0]}</div></div>'
     body = f"""{post_decor(trip, "fr")[1]}<section class="wrap post-head">{crumbs}<h1>{esc(p['title'])}</h1><div class="meta">{chips}</div></section>
 {cover}
-<div class="wrap post-wrap">{aside}<article class="prose">{render_body(p['body'])}{nav}</article></div>"""
+<div class="wrap post-wrap">{aside}<article class="prose">{prev_html}{render_body(p['body'])}{nav}</article></div>"""
     alt = trip_url(trip, "en") if trip else PATHS["en"]["home"]
     write(p["url"], layout(lang, p["url"], p["title"], p.get("description") or p["excerpt"], body, alt, image=p.get("cover"), active="trips"))
 

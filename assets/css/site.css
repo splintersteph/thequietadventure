@@ -411,11 +411,11 @@ a:hover { color: var(--forest-deep); }
 .nx-arrow { position: absolute; right: 0; bottom: 4px; font-size: 26px; line-height: 1; transition: transform .3s ease; }
 .post-nav2 .nx:hover .nx-arrow { transform: translateX(6px); }
 .post-nav2 .nx.end { min-height: 200px; }
-.post-nav2 .pv { display: flex; align-items: center; gap: 16px; text-decoration: none; color: var(--ink); padding: 10px; background: var(--card); box-shadow: var(--shadow); max-width: 480px; transition: transform .3s ease; }
-.post-nav2 .pv:hover { transform: translateX(-4px); color: var(--ink); }
-.post-nav2 .pv img { width: 96px; height: 72px; object-fit: cover; flex: none; cursor: pointer; margin: 0; }
-.post-nav2 .pv > span { margin: 0; }
-.post-nav2 .pv b { display: block; font-family: var(--serif); font-weight: 400; font-size: 19px; line-height: 1.25; margin-top: 2px; }
+.prose > .pv, .post-nav2 .pv { display: flex; align-items: center; gap: 16px; text-decoration: none; color: var(--ink); padding: 10px; background: var(--card); box-shadow: var(--shadow); max-width: 480px; transition: transform .3s ease; }
+.prose > .pv:hover { transform: translateX(-4px); color: var(--ink); }
+.prose > .pv img { width: 96px; height: 72px; object-fit: cover; flex: none; cursor: pointer; margin: 0; }
+.prose > .pv > span { margin: 0; }
+.prose > .pv b { display: block; font-family: var(--serif); font-weight: 400; font-size: 19px; line-height: 1.25; margin-top: 2px; }
 @media (max-width: 560px) { .post-nav2 .nx { min-height: 240px; padding: 24px 20px 64px; } .nx-top, .nx-road { left: 20px; right: 20px; } }
 @media (prefers-reduced-motion: reduce) { .nx-kicker, .nx-rider svg { animation: none; } .nx-rider, .post-nav2 .nx .bg { transition: none; } }
 
@@ -467,3 +467,7 @@ a:hover { color: var(--forest-deep); }
   .lt-ex { display: none; }
   .lt0 { min-height: 380px; }
 }
+.prose > .pv { font-family: var(--sans); margin: 0 0 2em; max-width: 420px; padding: 8px; gap: 14px; transform: rotate(-.8deg); }
+.prose > .pv img { width: 72px; height: 54px; }
+.prose > .pv b { font-size: 17px; }
+.prose > .pv:hover { transform: rotate(0) translateX(-4px); }
