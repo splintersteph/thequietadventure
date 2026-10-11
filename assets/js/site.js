@@ -148,3 +148,52 @@
   }, { rootMargin: "0px 0px -8% 0px" });
   Array.prototype.forEach.call(legs, function (l) { l.classList.add("reveal"); io.observe(l); });
 })();
+
+// Récits : particules sur la photo de couverture, voyageur qui avance avec la lecture, apparition des photos
+(function () {
+  var article = document.querySelector("article.prose");
+  if (!article) return;
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var box = document.querySelector(".cover-frame .hero-particles");
+  if (box && !reduce) {
+    var path = box.getAttribute("data-path"), colors = box.getAttribute("data-colors").split(","), kind = box.getAttribute("data-kind");
+    var n = kind === "butterflies" ? 4 : 12;
+    for (var i = 0; i < n; i++) {
+      var size = (kind === "snow" ? 6 : 12) + Math.random() * (kind === "snow" ? 6 : 12);
+      var el = document.createElement("i");
+      el.style.left = (Math.random() * 100) + "%";
+      el.style.animationDuration = (kind === "butterflies" ? 14 : 9) + Math.random() * 9 + "s";
+      el.style.animationDelay = (-Math.random() * 16) + "s";
+      el.innerHTML = '<svg width="' + size + '" height="' + size + '" viewBox="0 0 20 20" style="animation-duration:' + (1.6 + Math.random() * 2) +
+        's"><path d="' + path + '" fill="' + colors[i % colors.length] + '"/></svg>';
+      box.appendChild(el);
+    }
+  }
+
+  var bar = document.querySelector(".read-route");
+  if (bar) {
+    var done = bar.querySelector(".read-done"), rider = bar.querySelector(".rider"), idle;
+    var update = function () {
+      var r = article.getBoundingClientRect();
+      var total = r.height - window.innerHeight * 0.6;
+      var p = Math.min(1, Math.max(0, (-r.top + window.innerHeight * 0.3) / Math.max(1, total)));
+      done.style.width = (p * 100) + "%";
+      rider.style.left = "calc(" + (p * 100) + "% * 0.94 + 3%)";
+      rider.style.opacity = p > 0.01 ? "1" : "0";
+      bar.classList.remove("idle");
+      clearTimeout(idle);
+      idle = setTimeout(function () { bar.classList.add("idle"); }, 400);
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    update();
+  }
+
+  if (reduce || !("IntersectionObserver" in window)) return;
+  var targets = article.querySelectorAll(":scope > img, :scope > figure, :scope > .gallery, :scope > video, :scope > h3, :scope > h4, :scope > blockquote, :scope > .strava-card");
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+  }, { rootMargin: "0px 0px -10% 0px" });
+  Array.prototype.forEach.call(targets, function (t) { t.classList.add("rv"); io.observe(t); });
+})();

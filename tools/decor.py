@@ -115,3 +115,21 @@ def hero_decor(trip, lang):
         out += (f'<div class="hero-particles" aria-hidden="true" data-kind="{particles}" '
                 f'data-path="{esc(path)}" data-colors="{esc(",".join(colors))}"></div>')
     return out
+
+
+def post_decor(trip, lang):
+    """Ambient particles over the story's cover photo, and the reading-progress traveller."""
+    motif, particles, _ = DECOR.get(trip["slug"], ("compass", None, {})) if trip else ("compass", None, {})
+    mode = trip.get("mode", "velo") if trip else "velo"
+    cover = ""
+    if particles == "heat":
+        cover = '<div class="hero-heat" aria-hidden="true"></div>'
+    elif particles and PARTICLES.get(particles):
+        path, colors = PARTICLES[particles]
+        cover = (f'<div class="hero-particles" aria-hidden="true" data-kind="{particles}" '
+                 f'data-path="{esc(path)}" data-colors="{esc(",".join(colors))}"></div>')
+    color = trip.get("color", "#A8641F") if trip else "#A8641F"
+    progress = (f'<div class="read-route" aria-hidden="true" style="--trip:{color}"><span class="read-done"></span>'
+                f'<span class="rider">{motif_svg(mode, 30, color, 2.6)}</span>'
+                f'<span class="read-goal">{motif_svg(motif, 26, color, 2.4)}</span></div>')
+    return cover, progress

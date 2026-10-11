@@ -342,3 +342,31 @@ a:hover { color: var(--forest-deep); }
   .route-month, .route-end { text-align: left; margin-left: -64px; }
 }
 @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; translate: none; transition: none; } }
+
+/* ---------- Animations des récits ---------- */
+.cover-frame { position: relative; overflow: hidden; }
+.cover-frame .hero-particles i { top: -30px; }
+.read-route { position: fixed; z-index: 60; top: 0; left: 0; right: 0; height: 6px; background: rgba(42, 37, 33, .08); }
+.read-done { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--trip); }
+.read-route .rider { position: absolute; top: 4px; left: 0; transform: translateX(-50%); background: var(--paper); border-radius: 999px; padding: 3px 6px; box-shadow: 0 3px 10px rgba(60, 45, 30, .18); transition: opacity .3s; }
+.read-route .rider svg { display: block; animation: bob 1s ease-in-out infinite alternate; }
+.read-route .read-goal { position: absolute; top: 6px; right: 10px; opacity: .75; background: var(--paper); border-radius: 50%; padding: 3px; }
+.read-route.idle .rider svg { animation: none; }
+@media (max-width: 640px) { .read-route .read-goal { display: none; } .read-route .rider svg { width: 24px; height: 24px; } }
+
+.prose .rv { opacity: 0; translate: 0 26px; transition: opacity .8s ease, translate .8s ease; }
+.prose .rv.in { opacity: 1; translate: 0 0; }
+.prose .gallery.rv img { opacity: 0; transform: scale(.94) rotate(-1.5deg); transition: opacity .6s ease, transform .6s ease; }
+.prose .gallery.rv.in img { opacity: 1; transform: none; }
+.prose .gallery.rv.in img:nth-child(2) { transition-delay: .12s; }
+.prose .gallery.rv.in img:nth-child(3) { transition-delay: .24s; }
+.prose .gallery.rv.in img:nth-child(n+4) { transition-delay: .32s; }
+.prose h3, .prose h4 { position: relative; }
+.prose h3.rv::after, .prose h4.rv::after { content: ""; position: absolute; left: 36px; bottom: -6px; height: 3px; width: 0; background: var(--ochre); opacity: .6; border-radius: 2px; transition: width 1s ease .3s; }
+.prose h3.rv.in::after, .prose h4.rv.in::after { width: min(220px, 60%); }
+.strava-card svg.ic { transition: transform .6s ease; }
+.strava-card:hover svg.ic { transform: translateX(8px) rotate(-4deg); }
+@media (prefers-reduced-motion: reduce) {
+  .prose .rv, .prose .gallery.rv img { opacity: 1 !important; translate: none !important; transform: none !important; transition: none !important; }
+  .read-route .rider svg { animation: none; }
+}

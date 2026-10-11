@@ -18,7 +18,7 @@ import shutil
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from decor import hero_decor, stamp_svg  # noqa: E402
+from decor import hero_decor, post_decor, stamp_svg  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "_site")
@@ -638,8 +638,8 @@ def page_post(p, posts_by_trip):
         nav += "</nav>"
     cover = ""
     if p.get("cover"):
-        cover = f'<div class="wrap post-cover">{img(p["cover"], p["title"], cls="", width=1800, extra=" fetchpriority=\"high\"")}</div>'
-    body = f"""<section class="wrap post-head">{crumbs}<h1>{esc(p['title'])}</h1><div class="meta">{chips}</div></section>
+        cover = f'<div class="wrap post-cover"><div class="cover-frame">{img(p["cover"], p["title"], cls="", width=1800, extra=" fetchpriority=\"high\"")}{post_decor(trip, "fr")[0]}</div></div>'
+    body = f"""{post_decor(trip, "fr")[1]}<section class="wrap post-head">{crumbs}<h1>{esc(p['title'])}</h1><div class="meta">{chips}</div></section>
 {cover}
 <div class="wrap post-wrap">{aside}<article class="prose">{render_body(p['body'])}{nav}</article></div>"""
     alt = trip_url(trip, "en") if trip else PATHS["en"]["home"]
