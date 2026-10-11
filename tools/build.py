@@ -17,6 +17,9 @@ import re
 import shutil
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from decor import hero_decor, stamp_svg  # noqa: E402
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "_site")
 SITE_URL = "https://thequietadventure.com"
@@ -384,7 +387,7 @@ def trip_card(t, lang):
     lbl = f"{t['period'][lang]} · {T[lang]['modes'][t['mode']].lower()}"
     cats = " ".join([t["mode"]] + REGIONS.get(t["slug"], []))
     return f"""<a class="card" href="{trip_url(t, lang)}" data-cats="{cats}">
-{img(t.get('cover'), t['title'][lang], width=900)}
+<div class="card-media">{img(t.get('cover'), t['title'][lang], width=900)}<span class="card-stamp">{stamp_svg(t, lang, 84)}</span></div>
 <div class="body"><span class="label ochre">{esc(lbl)}</span><h3>{esc(t['title'][lang])}</h3>
 <p>{esc(t['lead'][lang])}</p><span class="label">{n} {T[lang]['stories'] if n > 1 else T[lang]['story']}</span></div></a>"""
 
@@ -534,10 +537,19 @@ def page_trip(lang, trip, books):
     other_url = trip_url(trip, "en" if lang == "fr" else "fr")
     n = len(trip["posts"])
     items = ""
+    month = None
     for p in trip["posts"]:
         note = ' <span class="lang-note">FR</span>' if lang == "en" else ""
-        items += f"""<li><span class="n">{p['step']}</span>{img(p.get('cover'), p['title'], width=700)}
-<a href="{p['url']}" lang="fr"><span class="label">{esc(fdate(p['dt'], lang))}</span><h3>{esc(p['title'])}{note}</h3><p>{esc(p['excerpt'])}</p></a></li>"""
+        m = (p["dt"].year, p["dt"].month)
+        if m != month:
+            month = m
+            items += f'<li class="route-month"><span>{esc(fdate(p["dt"], lang, False))}</span></li>'
+        side = "l" if p["step"] % 2 else "r"
+        items += f"""<li class="leg {side}"><span class="pin" aria-hidden="true">{p['step']}</span>
+<a class="leg-card" href="{p['url']}" lang="fr"><figure class="snap">{img(p.get('cover'), p['title'], cls='', width=900)}
+<figcaption>{esc(fdate(p['dt'], lang))}</figcaption></figure>
+<div class="leg-txt"><span class="label ochre">{t['step']} {p['step']} {t['of']} {n}</span><h3>{esc(p['title'])}{note}</h3><p>{esc(p['excerpt'])}</p>
+<span class="go">{'Lire le récit →' if lang == 'fr' else 'Read the story (in French) →'}</span></div></a></li>"""
     pts = [{"lat": p["geo"][0], "lng": p["geo"][1], "title": p["title"], "url": p["url"],
             "label": f"{t['step']} {p['step']}", "color": trip["color"]} for p in trip["posts"] if p.get("geo")]
     map_sec = ""
@@ -553,13 +565,13 @@ def page_trip(lang, trip, books):
 <div style="display:flex;flex-direction:column;gap:16px"><p class="kicker">{t['book_of_trip']}</p><h2 class="h-sec">{esc(book['title'][lang])}</h2>
 <p style="margin:0;color:var(--ink-soft);font-size:18px">{esc(book['tagline'][lang])} {esc(book['detail'][lang])}.</p>
 <div class="actions"><a class="btn" href="{PATHS[lang]['books']}#{book['id']}">{t['book_cta']}</a></div></div></div></section>"""
-    body = f"""<section class="trip-hero">{img(trip.get('cover'), trip['title'][lang], cls='', width=1800, extra=' fetchpriority="high"')}
+    body = f"""<section class="trip-hero">{img(trip.get('cover'), trip['title'][lang], cls='', width=1800, extra=' fetchpriority="high"')}{hero_decor(trip, lang)}
 <div class="wrap"><a class="crumbs" href="{PATHS[lang]['trips']}">{t['back_trips']}</a>
 <p class="kicker" style="margin-top:18px">{esc(trip['period'][lang])}</p><h1>{esc(trip['title'][lang])}</h1><p>{esc(trip['lead'][lang])}</p>
 <div class="chips"><span>{t['modes'][trip['mode']]}</span><span>{n} {t['stories'] if n > 1 else t['story']}</span></div></div></section>
 {map_sec}
 <section class="section"><div class="wrap"><div class="sec-head"><div><p class="kicker">{t['trip_stories']}</p></div></div>
-<ol class="steps">{items}</ol></div></section>
+<ol class="route" style="--trip:{trip['color']}">{items}<li class="route-end" aria-hidden="true"><span>{'Fin du voyage' if lang == 'fr' else 'The end'}</span></li></ol></div></section>
 {book_sec}"""
     write(url, layout(lang, url, trip["title"][lang], trip["lead"][lang], body, other_url, image=trip.get("cover"), active="trips"))
 
@@ -613,7 +625,7 @@ def page_post(p, posts_by_trip):
             pts = [{"lat": q["geo"][0], "lng": q["geo"][1], "title": q["title"], "url": q["url"], "color": trip["color"] if q is not p else "#B5483B",
                     "r": 5 if q is not p else 8} for q in tp if q.get("geo")]
             mini = map_div({"points": pts, "lines": trip_lines(trip)}, "map", t["trip_map"]).replace('class="map"', 'class="map" style="aspect-ratio:auto;height:240px;min-height:0"')
-        aside = f"""<aside class="post-aside"><div class="aside-card"><span class="kicker">{t['the_trip']}</span>
+        aside = f"""<aside class="post-aside"><div class="aside-card"><span class="aside-stamp">{stamp_svg(trip, lang, 96)}</span><span class="kicker">{t['the_trip']}</span>
 <a href="{trip_url(trip, lang)}" style="font-family:var(--serif);font-size:22px;text-decoration:none;color:var(--ink)">{esc(trip['title'][lang])}</a>
 <span class="label">{esc(trip['period'][lang])}</span>{mini}<nav aria-label="{esc(t['trip_stories'])}">{lis}</nav></div></aside>"""
         prev_p = tp[i - 1] if i > 0 else None

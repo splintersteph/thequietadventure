@@ -114,3 +114,37 @@
   window.addEventListener("hashchange", fromHash);
   fromHash();
 })();
+
+// Particules d'ambiance dans l'en-tête des voyages (pétales, feuilles, papillons…)
+(function () {
+  var box = document.querySelector(".hero-particles");
+  if (!box || (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) return;
+  var path = box.getAttribute("data-path");
+  var colors = box.getAttribute("data-colors").split(",");
+  var kind = box.getAttribute("data-kind");
+  var n = kind === "butterflies" ? 5 : (window.innerWidth < 640 ? 9 : 16);
+  for (var i = 0; i < n; i++) {
+    var size = (kind === "snow" ? 6 : 12) + Math.random() * (kind === "snow" ? 6 : 12);
+    var el = document.createElement("i");
+    el.style.left = (Math.random() * 100) + "%";
+    el.style.animationDuration = (kind === "butterflies" ? 14 : 9) + Math.random() * 9 + "s";
+    el.style.animationDelay = (-Math.random() * 16) + "s";
+    el.style.opacity = (kind === "snow" ? .8 : .9).toString();
+    var c = colors[i % colors.length];
+    var stroke = kind === "leaves" ? ' stroke="rgba(60,40,20,.35)" stroke-width="0.8"' : "";
+    el.innerHTML = '<svg width="' + size + '" height="' + size + '" viewBox="0 0 20 20" style="animation-duration:' +
+      (1.6 + Math.random() * 2) + 's"><path d="' + path + '" fill="' + c + '"' + stroke + '/></svg>';
+    box.appendChild(el);
+  }
+})();
+
+// Apparition des étapes au défilement
+(function () {
+  var legs = document.querySelectorAll(".leg");
+  if (!legs.length || !("IntersectionObserver" in window)) return;
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+  }, { rootMargin: "0px 0px -8% 0px" });
+  Array.prototype.forEach.call(legs, function (l) { l.classList.add("reveal"); io.observe(l); });
+})();

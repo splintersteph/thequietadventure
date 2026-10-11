@@ -264,3 +264,81 @@ a:hover { color: var(--forest-deep); }
 .dd-menu hr { border: 0; border-top: 1px solid var(--line); margin: 6px 0; }
 .dd:hover .dd-menu, .dd:focus-within .dd-menu { display: flex; }
 @media (max-width: 760px) { .dd-menu { display: none !important; } }
+
+/* ---------- Décor des voyages ---------- */
+.card-media { position: relative; }
+.card-stamp { position: absolute; right: 10px; bottom: -30px; width: 84px; height: 84px; border-radius: 50%; background: rgba(255, 253, 248, .92); transform: rotate(-12deg); transition: transform .35s ease; box-shadow: 0 4px 12px rgba(60, 45, 30, .12); }
+.card:hover .card-stamp { transform: rotate(4deg) scale(1.06); }
+.card .body { padding-top: 24px; }
+.card-stamp svg, .hero-stamp svg, .aside-stamp svg { display: block; }
+
+.trip-hero { overflow: hidden; }
+.hero-stamp { position: absolute; z-index: 2; top: 28px; right: 6%; width: 150px; height: 150px; border-radius: 50%; background: rgba(255, 253, 248, .9); transform: rotate(-10deg); animation: stamp-in .9s cubic-bezier(.2, 1.4, .4, 1) .3s both; box-shadow: 0 8px 24px rgba(0, 0, 0, .18); }
+@keyframes stamp-in { 0% { opacity: 0; transform: rotate(-30deg) scale(1.9); } 60% { opacity: 1; } 100% { opacity: 1; transform: rotate(-10deg) scale(1); } }
+@media (max-width: 640px) { .hero-stamp { width: 96px; height: 96px; top: 16px; right: 16px; } .hero-stamp svg { width: 96px; height: 96px; } }
+
+.hero-route { position: absolute; z-index: 1; left: 0; right: 0; bottom: 16px; height: 40px; pointer-events: none; }
+.hero-route::before { content: ""; position: absolute; left: 0; right: 0; bottom: 6px; border-top: 2px dashed rgba(255, 253, 248, .45); }
+.traveller { position: absolute; bottom: 4px; left: -60px; animation: ride 26s linear 1s infinite; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .35)); }
+.traveller svg { display: block; animation: bob 1.1s ease-in-out infinite alternate; }
+@keyframes ride { from { transform: translateX(0); } to { transform: translateX(calc(100vw + 120px)); } }
+@keyframes bob { from { transform: translateY(0); } to { transform: translateY(-2px); } }
+
+.hero-particles, .hero-heat { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+.hero-particles i { position: absolute; top: -30px; display: block; animation: fall linear infinite; }
+.hero-particles i svg { display: block; animation: sway ease-in-out infinite alternate; }
+.hero-particles[data-kind="butterflies"] i { top: auto; bottom: -30px; animation-name: flutter; }
+@keyframes fall { to { transform: translateY(560px) rotate(260deg); } }
+@keyframes flutter { 0% { transform: translate(0, 0); } 50% { transform: translate(40px, -240px); } 100% { transform: translate(-10px, -520px); opacity: 0; } }
+@keyframes sway { from { transform: translateX(-14px) rotate(-18deg); } to { transform: translateX(14px) rotate(18deg); } }
+.hero-heat { background: radial-gradient(ellipse at 80% 0%, rgba(255, 196, 92, .35), transparent 55%); animation: shimmer 6s ease-in-out infinite alternate; }
+@keyframes shimmer { from { opacity: .55; } to { opacity: 1; } }
+
+.aside-stamp { align-self: flex-end; margin: -50px -38px -6px 0; transform: rotate(-12deg); width: 96px; height: 96px; border-radius: 50%; background: var(--card); }
+@media (max-width: 960px) { .aside-stamp { margin: 0; align-self: flex-start; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-stamp, .traveller, .traveller svg, .hero-particles i, .hero-particles i svg, .hero-heat { animation: none !important; }
+  .traveller { left: 8%; }
+  .hero-particles { display: none; }
+}
+
+/* ---------- Le fil du voyage (page voyage) ---------- */
+.trip-hero a.crumbs { color: #FFFDF8; }
+.route { --trip: var(--ochre); list-style: none; margin: 0; padding: 12px 0 0; position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 112px; row-gap: 36px; }
+.route::before { content: ""; position: absolute; top: 0; bottom: 30px; left: 50%; margin-left: -1.5px; border-left: 3px dashed var(--trip); opacity: .55; }
+.route-month, .route-end { grid-column: 1 / -1; position: relative; z-index: 1; text-align: center; margin: 12px 0 0; }
+.route-month span, .route-end span { display: inline-block; padding: 6px 18px; border-radius: 999px; background: var(--trip); color: #FFFDF8; font-family: var(--hand); font-size: 24px; line-height: 1.2; box-shadow: 0 4px 12px rgba(60, 45, 30, .15); }
+.route-end span { background: var(--ink); }
+.leg { position: relative; display: flex; align-self: start; }
+.leg.l { grid-column: 1; }
+.leg.r { grid-column: 2; margin-top: 180px; }
+.leg .pin { position: absolute; top: 40px; z-index: 2; width: 52px; height: 52px; border-radius: 50%; background: var(--paper); border: 3px solid var(--trip); color: var(--trip); display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-size: 22px; font-weight: 600; box-shadow: 0 0 0 6px var(--paper); }
+.leg.l .pin { right: -82px; }
+.leg.r .pin { left: -82px; }
+.leg .pin::after { content: ""; position: absolute; top: 50%; width: 26px; border-top: 3px solid var(--trip); opacity: .55; }
+.leg.l .pin::after { right: 100%; margin-right: 3px; }
+.leg.r .pin::after { left: 100%; margin-left: 3px; }
+.leg-card { width: 100%; display: flex; flex-direction: column; text-decoration: none; color: var(--ink); background: var(--card); padding: 12px 12px 22px; box-shadow: 0 2px 0 #E2D7C3, 0 14px 32px rgba(60, 45, 30, .14); transition: transform .3s ease, box-shadow .3s ease; }
+.leg.l .leg-card { transform: rotate(-1.2deg); }
+.leg.r .leg-card { transform: rotate(1.2deg); }
+.leg .leg-card:hover { transform: rotate(0) translateY(-6px); box-shadow: 0 2px 0 #E2D7C3, 0 22px 44px rgba(60, 45, 30, .2); color: var(--ink); }
+.snap { margin: 0; position: relative; }
+.snap img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: var(--line); }
+.snap figcaption { position: absolute; left: 12px; bottom: -16px; padding: 2px 12px; background: var(--sand); color: var(--ink); font-family: var(--hand); font-size: 22px; transform: rotate(-3deg); box-shadow: 0 3px 8px rgba(60, 45, 30, .18); }
+.leg-txt { padding: 26px 10px 0; display: flex; flex-direction: column; gap: 8px; }
+.leg-txt h3 { margin: 0; font-family: var(--serif); font-weight: 400; font-size: 28px; line-height: 1.15; }
+.leg-txt p { margin: 0; color: var(--ink-soft); font-size: 15.5px; line-height: 1.55; }
+.leg-txt .go { margin-top: 4px; font-weight: 700; color: var(--trip); }
+.leg-card:hover h3 { text-decoration: underline; text-decoration-color: var(--trip); text-decoration-thickness: 2px; }
+.reveal { opacity: 0; translate: 0 30px; transition: opacity .7s ease, translate .7s ease; }
+.reveal.in { opacity: 1; translate: 0 0; }
+@media (max-width: 760px) {
+  .route { grid-template-columns: minmax(0, 1fr); row-gap: 30px; padding-left: 64px; }
+  .route::before { left: 26px; }
+  .leg.l, .leg.r { grid-column: 1; margin-top: 0; }
+  .leg.l .pin, .leg.r .pin { left: -60px; right: auto; top: 18px; width: 44px; height: 44px; font-size: 19px; }
+  .leg .pin::after { display: none; }
+  .route-month, .route-end { text-align: left; margin-left: -64px; }
+}
+@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; translate: none; transition: none; } }
