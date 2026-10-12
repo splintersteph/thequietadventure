@@ -23,7 +23,8 @@ from decor import hero_decor, motif_svg, post_decor, post_flags, stamp_svg, trip
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "_site")
 SITE_URL = "https://thequietadventure.com"
-BASE = os.environ.get("BASE_PATH", "").rstrip("/")  # "/thequietadventure" when served from github.io
+BASE = os.environ.get("BASE_PATH", "").rstrip("/")
+OG = "--no-og" not in sys.argv  # images d'aperçu : une minute de plus à la construction  # "/thequietadventure" when served from github.io
 WP_CDN = "https://i0.wp.com/thequietadventure.com/wp-content/uploads/"
 WP_ORIGIN = "https://thequietadventure.com/wp-content/uploads/"
 PALETTE = ["#A8641F", "#2F5D50", "#B5483B", "#3E6D8E", "#7A5C99", "#5E7F2E", "#C08A2E", "#8C4F6B", "#2E7F7A", "#6B6157"]
@@ -66,13 +67,14 @@ T = {
         "notfound_title": "Cette page s'est perdue en route.", "notfound_txt": "Elle a peut-être changé d'adresse avec le nouveau site.", "home": "Retour à l'accueil",
         "modes": {"velo": "À vélo", "train": "En train", "roadtrip": "Road trip", "expat": "Expatriation"},
         "lang_name": "Français",
+        "search": "Rechercher dans les récits", "search_short": "Chercher", "theme_dark": "Passer en mode nuit", "theme_light": "Passer en mode jour",
     },
     "en": {
         "tagline": "travel journal",
         "nav_trips": "Journeys", "nav_map": "Map", "nav_books": "Books", "nav_about": "About us", "nav_archive": "Archive",
         "menu": "Menu", "skip": "Skip to content",
         "hero_title": "Travelling slowly, as a family, at the pace of the pedals.",
-        "hero_lead": "Our travel stories, day after day: cycling routes, trains caught at the last second, playgrounds found for Clémence and the people we met along the way. The stories are written in French; journeys and books are introduced in English.",
+        "hero_lead": "Our travel stories, day after day: cycling routes, trains caught at the last second, playgrounds found for Clémence and the people we met along the way.",
         "read_latest": "Latest journey", "explore_map": "Explore the map",
         "latest_kicker": "Our latest journey", "whole_trip": "The whole journey →",
         "trips_kicker": "The big journeys", "trips_title": "One journey, one journal. Each reads like a book.",
@@ -80,7 +82,7 @@ T = {
         "books_kicker": "Our books", "books_title": "Every journey becomes a photo book.",
         "books_aside": "The blog stories, laid out again with the best photos of each trip.",
         "map_kicker": "The map", "map_title": "All our stories, where they happened.",
-        "map_aside": "Each dot is a story. Click it to open it (in French).",
+        "map_aside": "Each dot is a story. Click it to open it.",
         "stat_stories": "stories", "stat_countries": "countries", "stat_trips": "journeys", "stat_years": "years of journals",
         "about_kicker": "About us", "about_title": "Three travellers, two bikes, one trailer.",
         "about_short": "Stéphane writes, Cassandre runs and rides, Clémence picks the playgrounds. Since 2015 we have been telling our travels here: a year as expats in Australia, road trips, autumn in Québec and, since Clémence was born, slow journeys by bike.",
@@ -98,12 +100,13 @@ T = {
         "read_min": "min read", "back_trips": "← All journeys",
         "book_of_trip": "The book of the journey", "book_cta": "See the book",
         "books_page_lead": "After each journey we gather the stories and the best photos into a book. [Explain here how to get the books: PDF, print, Amazon…]",
-        "archive_title": "All stories", "archive_lead": "Ten years of journals, newest first. Stories are in French.",
+        "archive_title": "All stories", "archive_lead": "Ten years of journals, newest first.",
         "map_page_title": "The map of our travels",
         "trips_page_title": "Our journeys", "trips_page_lead": "Long bike journeys, road trips and years abroad, organised by journey rather than by country.",
         "notfound_title": "This page got lost on the way.", "notfound_txt": "It may have moved with the new site.", "home": "Back to the homepage",
         "modes": {"velo": "By bike", "train": "By train", "roadtrip": "Road trip", "expat": "Living abroad"},
         "lang_name": "English",
+        "search": "Search the stories", "search_short": "Search", "theme_dark": "Switch to night mode", "theme_light": "Switch to day mode",
     },
 }
 MONTHS = {"fr": ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"],
@@ -135,6 +138,16 @@ PATHS = {
 }
 
 esc = lambda s: html.escape(s or "", quote=True)
+
+
+class _Lazy:
+    """extras.py importe build.py : on le charge seulement au premier usage."""
+    def __getattr__(self, k):
+        import extras
+        return getattr(extras, k)
+
+
+VT = _Lazy()
 
 
 # ------------------------------------------------------------------ data
@@ -400,6 +413,9 @@ def trip_map_data(t, points, hl=None):
             data["hl"] = hl
     else:
         data["lines"] = trip_lines(t)
+    legs = VT.leg_lines(t)
+    if legs:
+        data["lines"] = data.get("lines", []) + legs
     return data
 
 
@@ -415,23 +431,34 @@ def trip_url(t, lang):
     return f"/voyages/{t['slug']}/" if lang == "fr" else f"/en/journeys/{t['en_slug']}/"
 
 
-def img(src, alt, cls="ph", width=1000, extra=""):
-    return f'<img class="{cls}" src="{esc(media(src, width))}" alt="{esc(alt)}" loading="lazy" decoding="async"{extra}>'
+def img(src, alt, cls="ph", width=1000, extra="", vt=None):
+    import extras
+    vts = f' style="view-transition-name:{vt}"' if vt else ""
+    lq = extras.lq_style(src)
+    if lq and vts:
+        lq = lq.replace(' style="', ' style="view-transition-name:' + vt + ';')
+        vts = ""
+    return f'<img class="{cls}" src="{esc(media(src, width))}" alt="{esc(alt)}" loading="lazy" decoding="async"{extra}{lq}{vts}>'
 
 
 def map_div(data, cls="map", label=""):
     return f'<div class="{cls}" data-map="{esc(json.dumps(data, ensure_ascii=False, separators=(",", ":")))}" role="region" aria-label="{esc(label)}"></div>'
 
 
-def layout(lang, path, title, desc, content, alt_path=None, image=None, active=None, body_class=""):
+def layout(lang, path, title, desc, content, alt_path=None, image=None, active=None, body_class="", og=None, head="", scripts=""):
     t = T[lang]
     P = PATHS[lang]
     other = "en" if lang == "fr" else "fr"
     alt_path = alt_path or PATHS[other]["home"]
     full_title = f"{title} — The Quiet Adventure" if title else "The Quiet Adventure"
-    og = SITE_URL + media(image or "/assets/img/home/hero.jpg", 1200) if (image or "/").startswith("/") else media(image, 1200)
-    if og.startswith(SITE_URL + "http"):
-        og = og[len(SITE_URL):]
+    og_size = ""
+    if og:
+        og_size = '\n<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">'
+        og = SITE_URL + og
+    else:
+        og = SITE_URL + media(image or "/assets/img/home/hero.jpg", 1200) if (image or "/").startswith("/") else media(image, 1200)
+        if og.startswith(SITE_URL + "http"):
+            og = og[len(SITE_URL):]
 
     def nav_link(key, label):
         cur = ' aria-current="page"' if active == key else ""
@@ -442,7 +469,7 @@ def layout(lang, path, title, desc, content, alt_path=None, image=None, active=N
     else:
         switch = f'<a href="{alt_path}" hreflang="fr" lang="fr">FR</a><span class="on" aria-current="true">EN</span>'
     return f"""<!doctype html>
-<html lang="{lang}">
+<html lang="{lang}" data-search="/data/search-{lang}.json?v={VERSION}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -456,7 +483,7 @@ def layout(lang, path, title, desc, content, alt_path=None, image=None, active=N
 <meta property="og:title" content="{esc(title or 'The Quiet Adventure')}">
 <meta property="og:description" content="{esc(desc)}">
 <meta property="og:url" content="{SITE_URL}{path}">
-<meta property="og:image" content="{esc(og)}">
+<meta property="og:image" content="{esc(og)}">{og_size}
 <meta property="og:locale" content="{'fr_FR' if lang == 'fr' else 'en_GB'}">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="alternate" type="application/rss+xml" title="The Quiet Adventure" href="{FEED[lang]}">
@@ -465,6 +492,9 @@ def layout(lang, path, title, desc, content, alt_path=None, image=None, active=N
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Karla:wght@400;500;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/site.css?v={VERSION}">
+<meta name="theme-color" content="#F3ECDF">
+<script>window.TQA_BASE="{BASE}";var th=null;try{{th=localStorage.getItem("tqa-theme")}}catch(e){{}}if(!th&&window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches)th="dark";if(th)document.documentElement.dataset.theme=th;</script>
+{head}
 </head>
 <body class="{body_class}">
 <a class="skip" href="#main">{t['skip']}</a>
@@ -477,9 +507,12 @@ def layout(lang, path, title, desc, content, alt_path=None, image=None, active=N
 {''.join(f'<a href="{P["trips"]}#{m}">{t["modes"][m]}</a>' for m in MODE_ORDER)}<hr>
 {''.join(f'<a href="{P["trips"]}#{r}">{REGION_NAMES[lang][r]}</a>' for r in REGION_ORDER)}</div></div>
 {nav_link('map', t['nav_map'])}
+<a href="{'/passeport/' if lang == 'fr' else '/en/passport/'}"{' aria-current="page"' if active == 'passport' else ''}>{'Passeport' if lang == 'fr' else 'Passport'}</a>
 {nav_link('books', t['nav_books'])}
 {nav_link('about', t['nav_about'])}
 <div class="lang" role="group" aria-label="Langue / Language">{switch}</div>
+<span class="tools"><button type="button" class="search-btn" aria-label="{t['search']}"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>{t['search_short']}</span><kbd>/</kbd></button>
+<button type="button" class="theme-btn" aria-label="{t['theme_dark']}" data-dark="{t['theme_dark']}" data-light="{t['theme_light']}"><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg></button></span>
 </nav>
 </div>
 </header>
@@ -490,12 +523,13 @@ def layout(lang, path, title, desc, content, alt_path=None, image=None, active=N
 <div class="wrap">
 <div class="top">
 <div><b>{t['footer_follow']}</b><p>{t['footer_follow_txt']}</p></div>
-<div class="links"><a href="{FEED[lang]}">{t['rss']}</a><a href="{P['archive']}">{t['nav_archive']}</a><a href="{P['trips']}">{t['nav_trips']}</a><a href="{P['books']}">{t['nav_books']}</a></div>
+<div class="links"><a href="{FEED[lang]}">{t['rss']}</a><a href="{P['archive']}">{t['nav_archive']}</a><a href="{P['trips']}">{t['nav_trips']}</a><a href="{P['books']}">{t['nav_books']}</a><a href="{'/passeport/' if lang == 'fr' else '/en/passport/'}">{'Le passeport' if lang == 'fr' else 'The passport'}</a></div>
 </div>
 <div class="bottom"><span>The Quiet Adventure — {t['since']}</span><span><a href="{PATHS['fr']['home']}" lang="fr">Français</a> · <a href="{PATHS['en']['home']}" lang="en">English</a></span></div>
 </div>
 </footer>
 <script src="/assets/js/site.js?v={VERSION}" defer></script>
+{scripts}
 </body>
 </html>
 """
@@ -504,7 +538,7 @@ def layout(lang, path, title, desc, content, alt_path=None, image=None, active=N
 def asset_version():
     import hashlib
     h = hashlib.md5()
-    for f in ("assets/css/site.css", "assets/js/site.js", "assets/labs/labs.css", "assets/labs/labs.js"):
+    for f in ("assets/css/site.css", "assets/js/site.js", "assets/js/globe.js", "assets/js/route.js"):
         h.update(open(os.path.join(ROOT, f), "rb").read())
     return h.hexdigest()[:8]
 
@@ -543,7 +577,7 @@ def trip_card(t, lang):
     lbl = f"{t['period'][lang]} · {T[lang]['modes'][t['mode']].lower()}"
     cats = " ".join([t["mode"]] + REGIONS.get(t["slug"], []))
     return f"""<a class="card" href="{trip_url(t, lang)}" data-cats="{cats}">
-<div class="card-media">{img(t.get('cover'), t['title'][lang], width=900)}<span class="card-stamp">{stamp_svg(t, lang, 84)}</span></div>
+<div class="card-media">{img(t.get('cover'), t['title'][lang], width=900, vt=VT.vt_trip(t))}<span class="card-stamp">{stamp_svg(t, lang, 84)}</span></div>
 <div class="body"><span class="flags">{trip_flags(t, 18)}</span><span class="label ochre">{esc(lbl)}</span><h3>{esc(t['title'][lang])}</h3>
 <p>{esc(t['lead'][lang])}</p><span class="label">{n} {T[lang]['stories'] if n > 1 else T[lang]['story']}</span></div></a>"""
 
@@ -570,7 +604,7 @@ def story_card(p, lang="fr"):
         lbl = f"{T[lang]['step']} {p['step']} · {lbl}"
     v = V(p, lang)
     return f"""<a class="story" href="{v['url']}" lang="{post_lang(p, lang)}">
-{img(p.get('cover'), v['title'], width=900)}
+{img(p.get('cover'), v['title'], width=900, vt=VT.vt_post(p))}
 <span class="label">{post_flags(p, 13)} {esc(lbl)}</span><h3>{esc(v['title'])}{fr_note(p, lang)}</h3><p>{esc(v['excerpt'])}</p></a>"""
 
 
@@ -580,7 +614,7 @@ def latest_section(trip, latest, lang):
     for i, p in enumerate(latest):
         note = fr_note(p, lang)
         v = V(p, lang)
-        tiles += f"""<a class="lt lt{i}" href="{v['url']}" lang="{post_lang(p, lang)}">{img(p.get('cover'), v['title'], cls='bg', width=1400 if i == 0 else 800)}
+        tiles += f"""<a class="lt lt{i}" href="{v['url']}" lang="{post_lang(p, lang)}">{img(p.get('cover'), v['title'], cls='bg', width=1400 if i == 0 else 800, vt=VT.vt_post(p))}
 <span class="lt-shade"></span><span class="lt-pin">{p['step']}</span>
 <span class="lt-body"><span class="lt-meta">{post_flags(p, 15)} {esc(fdate(p['dt'], lang))}</span>
 <span class="lt-title">{esc(v['title'])}{note}</span>{f'<span class="lt-ex">{esc(v["excerpt"])}</span>' if i == 0 else ''}
@@ -655,6 +689,8 @@ def page_home(lang, posts, trips, books):
 </figure>
 </div></section>
 
+{VT.globe_section(lang, trips)}
+
 {latest_section(latest_trip, latest, lang)}
 
 <section class="section" id="voyages"><div class="wrap">
@@ -669,16 +705,7 @@ def page_home(lang, posts, trips, books):
 <div class="grid3">{''.join(book_card(b, lang) for b in books)}</div>
 </div></section>
 
-<section class="section forest" id="carte"><div class="wrap">
-<div class="sec-head"><div><p class="kicker">{t['map_kicker']}</p><h2 class="h-sec">{t['map_title']}</h2></div><p class="aside" style="color:var(--on-forest-soft)">{t['map_aside']}</p></div>
-{map_div({"points": all_points(trips, lang)}, "map", t['map_title'])}
-<div class="stats">
-<div><b>{st['stories']}</b><span>{t['stat_stories']}</span></div>
-<div><b>{st['countries']}</b><span>{t['stat_countries']}</span></div>
-<div><b>{st['trips']}</b><span>{t['stat_trips']}</span></div>
-<div><b>{st['years']}</b><span>{t['stat_years']}</span></div>
-</div>
-</div></section>
+
 
 <section class="section" id="nous"><div class="wrap grid2">
 <figure class="polaroid tilt-r" style="margin:0"><div class="frame">
@@ -692,7 +719,8 @@ def page_home(lang, posts, trips, books):
 </div></section>
 """
     desc = t["hero_lead"]
-    write(P["home"], layout(lang, P["home"], "", desc, body, alt_path=PATHS["en" if lang == "fr" else "fr"]["home"]))
+    write(P["home"], layout(lang, P["home"], "", desc, body, alt_path=PATHS["en" if lang == "fr" else "fr"]["home"],
+                            scripts=VT.GLOBE_SCRIPTS.format(v=VERSION), body_class="home"))
 
 
 def page_trips(lang, trips):
@@ -769,7 +797,7 @@ def page_trip(lang, trip, books):
             items += f'<li class="route-month"><span>{esc(fdate(p["dt"], lang, False))}</span></li>'
         side = "l" if p["step"] % 2 else "r"
         items += f"""<li class="leg {side}"><span class="pin" aria-hidden="true">{p['step']}</span>
-<a class="leg-card" href="{v['url']}" lang="{post_lang(p, lang)}"><figure class="snap">{img(p.get('cover'), v['title'], cls='', width=900)}
+<a class="leg-card" href="{v['url']}" lang="{post_lang(p, lang)}"><figure class="snap">{img(p.get('cover'), v['title'], cls='', width=900, vt=VT.vt_post(p))}
 <figcaption>{esc(fdate(p['dt'], lang))}</figcaption></figure>
 <div class="leg-txt"><span class="label ochre">{t['step']} {p['step']} {t['of']} {n}{leg_km(p)}</span><h3>{esc(v['title'])}{note}</h3><p>{esc(v['excerpt'])}</p>
 <span class="go">{'Lire le récit →' if lang == 'fr' else ('Read the story →' if p.get('en') else 'Read the story (in French) →')}</span></div></a></li>"""
@@ -788,7 +816,7 @@ def page_trip(lang, trip, books):
 <div style="display:flex;flex-direction:column;gap:16px"><p class="kicker">{t['book_of_trip']}</p><h2 class="h-sec">{esc(book['title'][lang])}</h2>
 <p style="margin:0;color:var(--ink-soft);font-size:18px">{esc(book['tagline'][lang])} {esc(book['detail'][lang])}.</p>
 <div class="actions"><a class="btn" href="{PATHS[lang]['books']}#{book['id']}">{t['book_cta']}</a></div></div></div></section>"""
-    body = f"""<section class="trip-hero">{img(trip.get('cover'), trip['title'][lang], cls='', width=1800, extra=' fetchpriority="high"')}{hero_decor(trip, lang)}
+    body = f"""<section class="trip-hero">{img(trip.get('cover'), trip['title'][lang], cls='', width=1800, extra=' fetchpriority="high"', vt=VT.vt_trip(trip))}{hero_decor(trip, lang)}
 <div class="wrap"><a class="crumbs" href="{PATHS[lang]['trips']}">{t['back_trips']}</a>
 <p class="kicker" style="margin-top:18px">{esc(trip['period'][lang])}</p><h1>{esc(trip['title'][lang])}</h1><p>{esc(trip['lead'][lang])}</p>
 <div class="chips"><span class="flag-chip">{trip_flags(trip, 18)}</span><span>{t['modes'][trip['mode']]}</span><span>{n} {t['stories'] if n > 1 else t['story']}</span>{trip_km_chip(trip, lang)}</div></div></section>
@@ -839,6 +867,8 @@ def page_post(p, lang="fr"):
     aside = ""
     nav = ""
     prev_html = ""
+    rbody, route = VT.route_body(p, render_body(v['body'], lang, trip=trip), lang) if trip else (render_body(v['body'], lang, trip=trip), "")
+    rbody = VT.lq_body(rbody)
     if trip:
         tp = trip["posts"]
         i = p["step"] - 1
@@ -851,20 +881,22 @@ def page_post(p, lang="fr"):
             f'<a href="{V(q, lang)["url"]}"{" aria-current=\"page\" style=\"font-weight:700;color:var(--ink)\"" if q is p else ""}>{q["step"]}. {esc(V(q, lang)["title"])}</a>'
             for q in tp) if len(tp) <= 40 else ""
         mini = ""
-        if p.get("geo"):
+        if route:
+            mini = VT.route_panel(lang, trip.get("mode", "velo"))
+        elif p.get("geo"):
             pts = [{"lat": q["geo"][0], "lng": q["geo"][1], "title": V(q, lang)["title"], "url": V(q, lang)["url"], "color": trip["color"] if q is not p else "#B5483B",
                     "r": 5 if q is not p else 8} for q in tp if q.get("geo")]
             mini = map_div(trip_map_data(trip, pts, [a["id"] for a in p.get("acts", [])]), "map", t["trip_map"]).replace('class="map"', 'class="map" style="aspect-ratio:auto;height:240px;min-height:0"')
         aside = f"""<aside class="post-aside"><div class="aside-card"><span class="aside-stamp">{stamp_svg(trip, lang, 96)}</span><span class="kicker">{t['the_trip']}</span>
 <a href="{trip_url(trip, lang)}" style="font-family:var(--serif);font-size:22px;text-decoration:none;color:var(--ink)">{esc(trip['title'][lang])}</a>
-<span class="label">{esc(trip['period'][lang])}</span>{mini}<nav aria-label="{esc(t['trip_stories'])}">{lis}</nav></div></aside>"""
+<span class="label">{esc(trip['period'][lang])}</span>{mini}{f'<details class="aside-list"><summary>{t["trip_stories"]} ({len(tp)})</summary><nav aria-label="{esc(t["trip_stories"])}">{lis}</nav></details>' if route and lis else f'<nav aria-label="{esc(t["trip_stories"])}">{lis}</nav>'}</div></aside>"""
         prev_p = tp[i - 1] if i > 0 else None
         next_p = tp[i + 1] if i + 1 < len(tp) else None
         mode_icon = motif_svg(trip.get("mode", "velo"), 30, "#FFFDF8", 2.4)
         nav = f'<nav class="post-nav2" aria-label="{esc(t["trip_stories"])}" style="--trip:{trip["color"]}">'
         if next_p:
             nv = V(next_p, lang)
-            nav += f"""<a class="nx" href="{nv['url']}">{img(next_p.get('cover'), '', cls='bg', width=1200)}
+            nav += f"""<a class="nx" href="{nv['url']}">{img(next_p.get('cover'), '', cls='bg', width=1200, vt=VT.vt_post(next_p))}
 <span class="shade"></span><span class="nx-top"><span class="nx-kicker">{t['next'].replace(' →', '')}</span><span class="nx-step">{t['step']} {next_p['step']}</span></span>
 <span class="nx-title">{esc(nv['title'])}</span><span class="nx-date">{esc(fdate(next_p['dt'], lang))}</span>
 <span class="nx-road" aria-hidden="true"><span class="nx-rider">{mode_icon}</span><span class="nx-arrow">→</span></span></a>"""
@@ -882,18 +914,27 @@ def page_post(p, lang="fr"):
         nav += "</nav>"
         if prev_p:
             pv = V(prev_p, lang)
-            prev_html = f"""<a class="pv" href="{pv['url']}">{img(prev_p.get('cover'), '', cls='', width=500)}<span><span class="label">{t['prev']}</span><b>{esc(pv['title'])}</b></span></a>"""
+            prev_html = f"""<a class="pv" href="{pv['url']}">{img(prev_p.get('cover'), '', cls='', width=500, vt=VT.vt_post(prev_p))}<span><span class="label">{t['prev']}</span><b>{esc(pv['title'])}</b></span></a>"""
     cover = ""
     if p.get("cover"):
-        cover = f'<div class="wrap post-cover"><div class="cover-frame">{img(p["cover"], v["title"], cls="", width=1800, extra=" fetchpriority=\"high\"")}{post_decor(trip, lang)[0]}</div></div>'
-    body = f"""{post_decor(trip, lang)[1]}<section class="wrap post-head">{crumbs}<h1>{esc(v['title'])}</h1><div class="meta">{chips}</div></section>
+        cover = f'<div class="wrap post-cover"><div class="cover-frame">{img(p["cover"], v["title"], cls="", width=1800, extra=" fetchpriority=\"high\"", vt=VT.vt_post(p))}{post_decor(trip, lang)[0]}</div></div>'
+    top = post_decor(trip, lang)[1]
+    scripts = ""
+    if route:
+        kind = act_kind(p["acts"], lang)
+        top = VT.route_extras(lang, "pied" if kind == "pied" else "velo", trip["color"])
+        safe = route.replace("</", "<\\/")
+        scripts = f'<script type="application/json" id="rt-data">{safe}</script>\n<script src="/assets/js/route.js?v={VERSION}" defer></script>'
+    body = f"""{top}<section class="wrap post-head">{crumbs}<h1>{esc(v['title'])}</h1><div class="meta">{chips}</div></section>
 {cover}
-<div class="wrap post-wrap">{aside}<article class="prose">{prev_html}{render_body(v['body'], lang, trip=trip)}{tracks_section(p, trip, lang) if trip else ""}{nav}</article></div>"""
+<div class="wrap post-wrap">{aside}<article class="prose">{prev_html}{rbody}{tracks_section(p, trip, lang) if trip else ""}{nav}</article></div>"""
     if lang == "fr":
         alt = p["en"]["url"] if p.get("en") else (trip_url(trip, "en") if trip else PATHS["en"]["home"])
     else:
         alt = p["url"]
-    write(v["url"], layout(lang, v["url"], v["title"], v.get("description") or v["excerpt"], body, alt, image=p.get("cover"), active="trips"))
+    og = VT.og_image(p, lang) if OG else None
+    write(v["url"], layout(lang, v["url"], v["title"], v.get("description") or v["excerpt"], body, alt, image=p.get("cover"), active="trips",
+                           og=og, scripts=scripts, body_class="post" + (" has-route" if route else "")))
 
 
 def page_map(lang, trips):
@@ -1064,8 +1105,11 @@ def main():
     if os.path.exists(os.path.join(ROOT, "CNAME")):
         shutil.copy(os.path.join(ROOT, "CNAME"), os.path.join(OUT, "CNAME"))
     write_tracks(trips)
-    import labs
-    labs.build(posts, trips, books)
+    for lang in ("fr", "en"):
+        VT.search_index(posts, lang)
+        VT.page_passport(lang, posts)
+    redirect("/labs/", "/")
+    VT.save_lqip()
     open(os.path.join(OUT, ".nojekyll"), "w").close()
     print(f"Site construit : {len(posts)} récits, {len(trips)} voyages"
           + (f", {len(leftovers)} récits hors voyage : " + ", ".join(p['slug'] for p in leftovers) if leftovers else ""))

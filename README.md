@@ -77,3 +77,13 @@ Les traces affichées sur les récits et les cartes viennent de `data/strava/act
 - Un récit qui contient `<div class="strava" data-activity="ID"></div>` affiche automatiquement la carte de cette sortie.
 - Pour rattacher des sorties à un récit sans toucher au texte, ajouter les identifiants dans `data/strava/posts.json`, sous le nom du récit.
 - Pour ajouter de nouvelles sorties : exporter la liste des activités Strava (avec les polylignes) en JSON, puis `python tools/strava_merge.py export.json`.
+
+## Ce que le site sait faire en plus
+
+- **Le globe de l'accueil** : les voyages se dessinent dans l'ordre, avec nos traces GPS (vélo, marche) et les liaisons racontées dans les récits (train, car, voiture, bateau, avion). Ces liaisons sont dans `data/routes.json`, voyage par voyage. Les mêmes liaisons apparaissent en pointillés sur la carte de chaque voyage.
+- **Le récit au fil de la route** : sur un récit qui a des traces Strava, la carte, le profil d'altitude et la petite barre du haut suivent la lecture. Chaque intertitre daté (« Mardi 16 septembre ») est relié à la sortie Strava du même jour. Les altitudes sont dans `data/altitude/altitude.json` (une liste de 60 points par sortie) ; une sortie sans altitude s'affiche simplement sans profil.
+- **Le passeport** (`/passeport/`) : un tampon par pays, calculé à partir des catégories des récits.
+- **La recherche** : bouton loupe ou touche `/`, dans les deux langues.
+- **Les aperçus de partage** : une image 1200 × 630 est générée pour chaque récit (`/og/…`), avec la photo, le tampon du voyage, la trace et les kilomètres. Pour construire plus vite sur son ordinateur : `python3 tools/build.py --no-og`.
+- **Le mode nuit** suit le réglage de l'appareil, et le bouton lune/soleil le change.
+- **Les photos** s'affichent d'abord floues (aperçu de quelques octets gardé dans `data/lqip.json`, complété automatiquement), puis nettes, et s'ouvrent dans une visionneuse qu'on fait défiler au doigt.

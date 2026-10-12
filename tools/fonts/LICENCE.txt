@@ -1,0 +1,2 @@
+Polices utilisées pour dessiner les images de partage (Newsreader, Karla, Caveat), sous licence SIL Open Font License 1.1 — https://openfontlicense.org
+Source : https://github.com/google/fonts

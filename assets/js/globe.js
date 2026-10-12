@@ -1,9 +1,10 @@
-/* Prototype d'accueil : dix ans de voyages dessinés sur un globe, dans l'ordre */
+/* Accueil : dix ans de voyages dessinés sur un globe, dans l'ordre */
 (function () {
   "use strict";
   var BASE = window.TQA_BASE || "";
   var wrap = document.querySelector(".gl");
   if (!wrap || !window.d3 || !window.topojson) return;
+  var I = JSON.parse(wrap.dataset.i18n || "{}");
   var canvas = wrap.querySelector(".gl-canvas"), ctx = canvas.getContext("2d");
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var $ = function (s) { return wrap.querySelector(s); };
@@ -177,7 +178,7 @@
   var ease = function (x) { return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
 
   // ---------- séquence ----------
-  var playing = !reduce, anim = null, timer = null;
+  var playing = false, anim = null, timer = null;
   function setCounters(t, dur) {
     ["km", "countries", "stories"].forEach(function (k) {
       var c = counters[k];
@@ -189,20 +190,21 @@
       Object.keys(counters).forEach(function (k) {
         var c = counters[k];
         c.v = Math.round(c.from + (c.to - c.from) * ease(f));
-        c.el.textContent = c.v.toLocaleString("fr-FR");
+        c.el.textContent = c.v.toLocaleString(I.locale);
       });
       if (f < 1) requestAnimationFrame(step);
     })(t0);
   }
   // légende : les moyens de transport du voyage, avec leurs kilomètres
+  var M = I.modes || {};
   var LEG = [
-    ["velo", "à vélo", '<path d="M2 6h30" stroke="C" stroke-width="3" stroke-linecap="round"/>'],
-    ["pied", "à pied", '<path d="M2 6h30" stroke="C" stroke-width="2.2" stroke-linecap="round"/>'],
-    ["train", "en train", '<path d="M2 6h30" stroke="C" stroke-width="3.6"/><path d="M2 6h30" stroke="P" stroke-width="1.4" stroke-dasharray="3 3"/>'],
-    ["bus", "en car et en bus", '<path d="M2 6h30" stroke="C" stroke-width="2.6" stroke-dasharray="7 4"/>'],
-    ["voiture", "en voiture", '<path d="M2 6h30" stroke="C" stroke-width="2.5" stroke-dasharray="3 3"/>'],
-    ["bateau", "en bateau", '<path d="M3 6h28" stroke="C" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="0.1 5"/>'],
-    ["avion", "en avion", '<path d="M3 6h28" stroke="C" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="0.1 5.5" opacity=".7"/>']
+    ["velo", M.velo, '<path d="M2 6h30" stroke="C" stroke-width="3" stroke-linecap="round"/>'],
+    ["pied", M.pied, '<path d="M2 6h30" stroke="C" stroke-width="2.2" stroke-linecap="round"/>'],
+    ["train", M.train, '<path d="M2 6h30" stroke="C" stroke-width="3.6"/><path d="M2 6h30" stroke="P" stroke-width="1.4" stroke-dasharray="3 3"/>'],
+    ["bus", M.bus, '<path d="M2 6h30" stroke="C" stroke-width="2.6" stroke-dasharray="7 4"/>'],
+    ["voiture", M.voiture, '<path d="M2 6h30" stroke="C" stroke-width="2.5" stroke-dasharray="3 3"/>'],
+    ["bateau", M.bateau, '<path d="M3 6h28" stroke="C" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="0.1 5"/>'],
+    ["avion", M.avion, '<path d="M3 6h28" stroke="C" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="0.1 5.5" opacity=".7"/>']
   ];
   var legendEl = $(".gl-legend");
   function legend(modes, color) {
@@ -210,7 +212,7 @@
     legendEl.innerHTML = LEG.filter(function (l) { return modes && modes[l[0]]; }).map(function (l) {
       var sw = l[2].replace(/C/g, color || "currentColor").replace(/P/g, col.paper);
       return '<li><svg viewBox="0 0 34 12" width="34" height="12" aria-hidden="true">' + sw + "</svg><span>" + l[1] +
-        "</span><b>" + modes[l[0]].toLocaleString("fr-FR") + " km</b></li>";
+        "</span><b>" + modes[l[0]].toLocaleString(I.locale) + " km</b></li>";
     }).join("");
   }
   function caption(t) {
@@ -220,7 +222,7 @@
     nameEl.href = BASE + t.url;
     nameEl.style.setProperty("--trip", t.color);
     periodEl.textContent = t.period;
-    flagsEl.innerHTML = t.flags.replace(/ loading="lazy"/g, "");
+    flagsEl.innerHTML = t.flags.replace(/ loading="lazy"/g, "").replace(/src="\//g, 'src="' + BASE + "/");
     lineEl.querySelectorAll("li").forEach(function (li, i) {
       li.classList.toggle("on", i === state.cur);
       li.classList.toggle("done", i <= state.done);
@@ -271,30 +273,30 @@
     state.cur = -1; state.done = trips.length - 1;
     var t = trips[trips.length - 1];
     yearEl.textContent = "2015 – " + t.year;
-    nameEl.textContent = "Tous les voyages";
-    nameEl.href = BASE + "/voyages/";
-    periodEl.textContent = trips.length + " carnets, du Sri Lanka au Piémont";
+    nameEl.textContent = I.all;
+    nameEl.href = BASE + I.trips;
+    periodEl.textContent = I.all_period.replace("{n}", trips.length);
     flagsEl.innerHTML = "";
     var tot = {};
     trips.forEach(function (x) { Object.keys(x.modes).forEach(function (m) { tot[m] = (tot[m] || 0) + x.modes[m]; }); });
-    caption({ year: yearEl.textContent, title: nameEl.textContent, url: "/voyages/", color: "", period: periodEl.textContent, flags: "", modes: tot });
+    caption({ year: yearEl.textContent, title: nameEl.textContent, url: I.trips, color: "", period: periodEl.textContent, flags: "", modes: tot });
     setCounters(t, 600);
     wrap.classList.add("done");
     fly({ lon: 40, lat: 25, k: 1 }, 2000, spin);
-    playBtn.textContent = "Lecture";
+    playBtn.textContent = I.play;
     playBtn.setAttribute("aria-pressed", "false");
     playing = false;
   }
-  var spinning = false;
+  var spinning = false, onScreen = true;
+  if ("IntersectionObserver" in window) new IntersectionObserver(function (es) { onScreen = es[0].isIntersecting; }).observe(canvas);
   function spin() {
     if (reduce) return;
     spinning = true;
     var last = performance.now();
     (function step(now) {
       if (!spinning) return;
-      view.lon += (now - last) * 0.004;
+      if (onScreen) { view.lon += (now - last) * 0.004; draw(); }
       last = now;
-      draw();
       anim = requestAnimationFrame(step);
     })(last);
   }
@@ -303,14 +305,14 @@
   var playBtn = $(".gl-play");
   playBtn.addEventListener("click", function () {
     playing = !playing;
-    playBtn.textContent = playing ? "Pause" : "Lecture";
+    playBtn.textContent = playing ? I.pause : I.play;
     playBtn.setAttribute("aria-pressed", playing ? "true" : "false");
     if (playing) { spinning = false; wrap.classList.remove("done"); play(state.cur >= 0 && state.cur > state.done ? state.cur : state.done + 1); }
     else clearTimeout(timer);
   });
   $(".gl-replay").addEventListener("click", function () {
     spinning = false; playing = true; wrap.classList.remove("done");
-    playBtn.textContent = "Pause"; playBtn.setAttribute("aria-pressed", "true");
+    playBtn.textContent = I.pause; playBtn.setAttribute("aria-pressed", "true");
     Object.keys(counters).forEach(function (k) { counters[k].v = 0; });
     play(0);
   });
@@ -332,8 +334,8 @@
 
   // ---------- données ----------
   Promise.all([
-    fetch(BASE + "/assets/labs/vendor/countries-110m.json").then(function (r) { return r.json(); }),
-    fetch(BASE + "/labs/data/globe.json").then(function (r) { return r.json(); })
+    fetch(BASE + "/assets/vendor/countries-110m.json").then(function (r) { return r.json(); }),
+    fetch(BASE + I.data).then(function (r) { return r.json(); })
   ]).then(function (res) {
     var topo = res[0];
     land110 = topojson.merge(topo, topo.objects.countries.geometries);
@@ -348,17 +350,27 @@
       li.innerHTML = '<button type="button" aria-label="' + t.title + ", " + t.period + '"></button>' + (showYear ? '<span class="y">' + t.year + "</span>" : "");
       li.querySelector("button").addEventListener("click", function () {
         spinning = false; wrap.classList.remove("done"); playing = true;
-        playBtn.textContent = "Pause"; playBtn.setAttribute("aria-pressed", "true");
+        playBtn.textContent = I.pause; playBtn.setAttribute("aria-pressed", "true");
         play(i);
       });
       lineEl.appendChild(li);
     });
     resize();
     window.addEventListener("resize", resize);
-    fetch(BASE + "/assets/labs/vendor/land-50m.json").then(function (r) { return r.json(); }).then(function (t50) {
+    fetch(BASE + "/assets/vendor/land-50m.json").then(function (r) { return r.json(); }).then(function (t50) {
       land50 = topojson.feature(t50, t50.objects.land);
       draw();
     });
-    if (reduce) finish(); else setTimeout(function () { play(0); }, 500);
+    // la lecture démarre quand le globe arrive à l'écran
+    if (reduce) { finish(); return; }
+    var go = function () {
+      playing = true; playBtn.textContent = I.pause; playBtn.setAttribute("aria-pressed", "true");
+      setTimeout(function () { play(0); }, 300);
+    };
+    if (!("IntersectionObserver" in window)) return go();
+    var io = new IntersectionObserver(function (es) {
+      if (es[0].intersectionRatio >= 0.35) { io.disconnect(); go(); }
+    }, { threshold: [0, 0.35] });
+    io.observe(canvas);
   });
 })();
