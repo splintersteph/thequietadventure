@@ -47,21 +47,61 @@
 
   // ---------- dessin ----------
   var state = { cur: -1, prog: 0, done: -1 };   // done : dernier voyage entièrement dessiné
-  function partial(lines, p) {
-    if (p >= 1) return lines;
+  // longueur « animée » d'un tronçon : les avions passent vite, le reste au rythme de la route
+  var MODE_W = { avion: 0.12 };
+  function segLen(sg) {
+    if (sg._len == null) sg._len = Math.max(1e-4, d3.geoLength({ type: "LineString", coordinates: sg.c })) * (MODE_W[sg.m] || 1);
+    return sg._len;
+  }
+  // les tronçons visibles quand une fraction p du voyage est dessinée
+  function partialSegs(segs, p) {
+    if (p >= 1) return segs;
     var total = 0;
-    lines.forEach(function (l) { total += l.length - 1; });
+    segs.forEach(function (sg) { total += segLen(sg); });
     var budget = p * total, out = [];
-    for (var i = 0; i < lines.length && budget > 0; i++) {
-      var l = lines[i], n = l.length - 1;
-      if (budget >= n) { out.push(l); budget -= n; continue; }
-      var whole = Math.floor(budget), f = budget - whole, seg = l.slice(0, whole + 1);
-      var a = l[whole], b = l[Math.min(whole + 1, n)];
-      seg.push([a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f]);
-      out.push(seg);
+    for (var i = 0; i < segs.length && budget > 0; i++) {
+      var sg = segs[i], L = segLen(sg);
+      if (budget >= L) { out.push(sg); budget -= L; continue; }
+      var f = budget / L, c = sg.c, n = c.length - 1, pos = f * n, whole = Math.floor(pos), r = pos - whole;
+      var part = c.slice(0, whole + 1), A = c[whole], Bp = c[Math.min(whole + 1, n)];
+      part.push([A[0] + (Bp[0] - A[0]) * r, A[1] + (Bp[1] - A[1]) * r]);
+      out.push({ m: sg.m, c: part, head: true });
       budget = 0;
     }
     return out;
+  }
+  // un style par moyen de transport : trait plein pour nos traces, rails, tirets, pointillés…
+  function strokeSeg(sg, color, on, sc) {
+    var w = (on ? 2.8 : 1.8) * Math.min(sc, 1.6), k = Math.min(sc, 2);
+    ctx.beginPath(); path({ type: "LineString", coordinates: sg.c });
+    ctx.lineJoin = "round";
+    var halo = function (extra) { ctx.setLineDash([]); ctx.lineCap = "round"; ctx.strokeStyle = col.paper; ctx.globalAlpha = 0.8; ctx.lineWidth = w + extra; ctx.stroke(); ctx.globalAlpha = 1; };
+    ctx.strokeStyle = color;
+    switch (sg.m) {
+      case "train":
+        halo(2.6);
+        ctx.strokeStyle = color; ctx.lineCap = "butt"; ctx.lineWidth = w * 1.25; ctx.stroke();
+        ctx.setLineDash([3.2 * k, 3.2 * k]); ctx.strokeStyle = col.paper; ctx.lineWidth = w * 0.5; ctx.stroke();
+        break;
+      case "bus":
+        halo(2.2);
+        ctx.strokeStyle = color; ctx.lineCap = "butt"; ctx.setLineDash([7 * k, 4 * k]); ctx.lineWidth = w; ctx.stroke();
+        break;
+      case "voiture":
+        halo(2.2);
+        ctx.strokeStyle = color; ctx.lineCap = "butt"; ctx.setLineDash([3 * k, 3 * k]); ctx.lineWidth = w * 0.95; ctx.stroke();
+        break;
+      case "bateau":
+        ctx.strokeStyle = color; ctx.lineCap = "round"; ctx.setLineDash([0.1, 5 * k]); ctx.lineWidth = w * 1.5; ctx.stroke();
+        break;
+      case "avion":
+        ctx.strokeStyle = color; ctx.lineCap = "round"; ctx.setLineDash([0.1, 6 * k]); ctx.lineWidth = w * 0.9; ctx.globalAlpha = 0.6; ctx.stroke(); ctx.globalAlpha = 1;
+        break;
+      default: // vélo, à pied
+        halo(2.6);
+        ctx.strokeStyle = color; ctx.lineCap = "round"; ctx.lineWidth = sg.m === "pied" ? w * 0.8 : w; ctx.stroke();
+    }
+    ctx.setLineDash([]);
   }
   function visible(pt) { return d3.geoDistance(pt, [view.lon, view.lat]) < Math.PI / 2 - 0.02; }
 
@@ -95,15 +135,8 @@
       var p = i <= state.done ? 1 : i === state.cur ? state.prog : 0;
       if (p <= 0) return;
       var on = i === state.cur;
-      var ls = partial(t.lines, p);
-      ctx.beginPath();
-      path({ type: "MultiLineString", coordinates: ls });
-      ctx.lineJoin = ctx.lineCap = "round";
-      if (t.dashed) ctx.setLineDash([5 * Math.min(sc, 2), 5 * Math.min(sc, 2)]);
-      ctx.strokeStyle = col.paper; ctx.lineWidth = (on ? 5.5 : 3.6) * Math.min(sc, 1.6); ctx.globalAlpha = 0.8; ctx.stroke();
-      ctx.globalAlpha = 1;
-      ctx.strokeStyle = t.color; ctx.lineWidth = (on ? 2.8 : 1.8) * Math.min(sc, 1.6); ctx.stroke();
-      ctx.setLineDash([]);
+      var ls = partialSegs(t.segs, p);
+      ls.forEach(function (sg) { strokeSeg(sg, t.color, on, sc); });
       if (on) {
         var npins = Math.floor(t.pins.length * p);
         for (var k = 0; k < npins; k++) {
@@ -113,8 +146,8 @@
           ctx.fillStyle = col.paper; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = t.color; ctx.stroke();
         }
         var last = ls[ls.length - 1];
-        if (last && last.length && p < 1) {
-          var head = last[last.length - 1];
+        if (last && last.c.length && p < 1) {
+          var head = last.c[last.c.length - 1];
           if (visible(head)) {
             var h = proj(head);
             ctx.beginPath(); ctx.arc(h[0], h[1], 6, 0, Math.PI * 2); ctx.fillStyle = t.color; ctx.fill();
@@ -134,7 +167,8 @@
 
   // ---------- cadrage d'un voyage ----------
   function frame(t) {
-    var all = { type: "MultiLineString", coordinates: t.lines.concat(t.pins.length ? [t.pins] : []) };
+    var ground = t.segs.filter(function (sg) { return sg.m !== "avion"; }).map(function (sg) { return sg.c; });
+    var all = { type: "MultiLineString", coordinates: ground.concat(t.pins.length ? [t.pins] : []) };
     var b = d3.geoBounds(all), c = d3.geoCentroid(all);
     var d = d3.geoDistance(b[0], b[1]);
     var k = Math.max(1, Math.min(5.5, 0.95 / Math.max(d, 0.07)));
@@ -160,7 +194,27 @@
       if (f < 1) requestAnimationFrame(step);
     })(t0);
   }
+  // légende : les moyens de transport du voyage, avec leurs kilomètres
+  var LEG = [
+    ["velo", "à vélo", '<path d="M2 6h30" stroke="C" stroke-width="3" stroke-linecap="round"/>'],
+    ["pied", "à pied", '<path d="M2 6h30" stroke="C" stroke-width="2.2" stroke-linecap="round"/>'],
+    ["train", "en train", '<path d="M2 6h30" stroke="C" stroke-width="3.6"/><path d="M2 6h30" stroke="P" stroke-width="1.4" stroke-dasharray="3 3"/>'],
+    ["bus", "en car et en bus", '<path d="M2 6h30" stroke="C" stroke-width="2.6" stroke-dasharray="7 4"/>'],
+    ["voiture", "en voiture", '<path d="M2 6h30" stroke="C" stroke-width="2.5" stroke-dasharray="3 3"/>'],
+    ["bateau", "en bateau", '<path d="M3 6h28" stroke="C" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="0.1 5"/>'],
+    ["avion", "en avion", '<path d="M3 6h28" stroke="C" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="0.1 5.5" opacity=".7"/>']
+  ];
+  var legendEl = $(".gl-legend");
+  function legend(modes, color) {
+    if (!legendEl) return;
+    legendEl.innerHTML = LEG.filter(function (l) { return modes && modes[l[0]]; }).map(function (l) {
+      var sw = l[2].replace(/C/g, color || "currentColor").replace(/P/g, col.paper);
+      return '<li><svg viewBox="0 0 34 12" width="34" height="12" aria-hidden="true">' + sw + "</svg><span>" + l[1] +
+        "</span><b>" + modes[l[0]].toLocaleString("fr-FR") + " km</b></li>";
+    }).join("");
+  }
   function caption(t) {
+    legend(t.modes, t.color);
     yearEl.textContent = t.year;
     nameEl.textContent = t.title;
     nameEl.href = BASE + t.url;
@@ -206,7 +260,7 @@
     var f = frame(t);
     fly(f, 1500, function () {
       setCounters(t, 1900);
-      drawTrip(i, 1900 + Math.min(1600, t.lines.length * 40), function () {
+      drawTrip(i, 2200 + Math.min(3200, t.segs.length * 140), function () {
         state.done = i;
         caption(t);
         if (playing) timer = setTimeout(function () { play(i + 1); }, 800);
@@ -221,7 +275,9 @@
     nameEl.href = BASE + "/voyages/";
     periodEl.textContent = trips.length + " carnets, du Sri Lanka au Piémont";
     flagsEl.innerHTML = "";
-    caption({ year: yearEl.textContent, title: nameEl.textContent, url: "/voyages/", color: "", period: periodEl.textContent, flags: "" });
+    var tot = {};
+    trips.forEach(function (x) { Object.keys(x.modes).forEach(function (m) { tot[m] = (tot[m] || 0) + x.modes[m]; }); });
+    caption({ year: yearEl.textContent, title: nameEl.textContent, url: "/voyages/", color: "", period: periodEl.textContent, flags: "", modes: tot });
     setCounters(t, 600);
     wrap.classList.add("done");
     fly({ lon: 40, lat: 25, k: 1 }, 2000, spin);

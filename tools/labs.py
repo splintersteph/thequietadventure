@@ -111,36 +111,98 @@ def lq_img(src, alt="", cls="", width=1400, caption="", extra=""):
 
 
 # ------------------------------------------------------------------ 1. accueil : le globe
+def hav(a, b):
+    la1, lo1, la2, lo2 = map(math.radians, (a[0], a[1], b[0], b[1]))
+    h = math.sin((la2 - la1) / 2) ** 2 + math.cos(la1) * math.cos(la2) * math.sin((lo2 - lo1) / 2) ** 2
+    return 6371 * 2 * math.asin(min(1, math.sqrt(h)))
+
+
+def gc_interp(a, b, f):
+    """Point à la fraction f du grand cercle entre a et b ([lat, lng])."""
+    la1, lo1, la2, lo2 = map(math.radians, (a[0], a[1], b[0], b[1]))
+    d = hav(a, b) / 6371
+    if d < 1e-9:
+        return a
+    A, Bc = math.sin((1 - f) * d) / math.sin(d), math.sin(f * d) / math.sin(d)
+    x = A * math.cos(la1) * math.cos(lo1) + Bc * math.cos(la2) * math.cos(lo2)
+    y = A * math.cos(la1) * math.sin(lo1) + Bc * math.cos(la2) * math.sin(lo2)
+    z = A * math.sin(la1) + Bc * math.sin(la2)
+    return [math.degrees(math.atan2(z, math.hypot(x, y))), math.degrees(math.atan2(y, x))]
+
+
+def densify(pts, step_km=25, plane=False):
+    out = [pts[0]]
+    for a, b in zip(pts, pts[1:]):
+        n = 48 if plane else max(1, min(40, int(hav(a, b) / step_km)))
+        out += [gc_interp(a, b, k / n) for k in range(1, n + 1)]
+    return out
+
+
+def line_km(pts):
+    return sum(hav(a, b) for a, b in zip(pts, pts[1:]))
+
+
+ROUTES = None
+
+
+def trip_segments(t):
+    """Traces GPS et liaisons des récits, dans l'ordre où elles ont été parcourues."""
+    global ROUTES
+    if ROUTES is None:
+        ROUTES = json.load(open(os.path.join(B.ROOT, "data", "routes.json"), encoding="utf-8"))
+    ev = []
+    for a in t["acts"]:
+        pts = rdp(B.decode_polyline(a["poly"]), 0.0012)
+        ev.append((a["date"][:10], 1, {"m": "velo" if a["type"] == "Ride" else "pied", "pts": pts, "n": a["name"], "gps": True,
+                                        "km": a["dist"] / 1000}))
+    for leg in ROUTES.get(t["slug"], []):
+        ev.append((leg["d"], 2 if leg.get("after") else 0, dict(leg)))
+    ev.sort(key=lambda e: (e[0], e[1]))
+    segs = [dict(e[2], d=e[0]) for e in ev]
+    for i, sg in enumerate(segs):
+        if sg.get("gps"):
+            continue
+        pts = list(sg["pts"])
+        if pts and pts[0] == "prev":
+            pts = ([segs[i - 1]["pts"][-1]] if i > 0 else []) + pts[1:]
+        if sg.get("to") == "next" and i + 1 < len(segs):
+            nxt = segs[i + 1]["pts"][0]
+            if nxt != "prev":
+                pts = pts + [nxt]
+        sg["pts"] = densify(pts, plane=sg["m"] == "avion")
+        sg["km"] = line_km(sg["pts"])
+    for a, b in zip(segs, segs[1:]):  # trous qui restent : on les signale à la construction
+        gap = hav(a["pts"][-1], b["pts"][0])
+        if gap > 12 and b["m"] != "avion" and a["m"] != "avion":
+            from datetime import date
+            da, db = date.fromisoformat(a["d"]), date.fromisoformat(b["d"])
+            if (db - da).days <= 4:
+                print(f"  [globe] trou de {gap:.0f} km dans {t['slug']} le {b['d']} avant « {b.get('n', '')} »")
+    return segs
+
+
 def globe_data(trips, posts):
     chrono = sorted(trips, key=lambda t: t["start"])
-    seen_c, n_posts, km_bike, out = set(), 0, 0.0, []
+    seen_c, n_posts, km_self, out = set(), 0, 0.0, []
     for t in chrono:
-        lines, dashed = [], False
-        for a in t["acts"]:
-            pts = rdp(B.decode_polyline(a["poly"]), 0.0012)
-            lines.append([[round(p[1], 3), round(p[0], 3)] for p in pts])
-            km_bike += a["dist"] / 1000
-        if not lines:
-            geo = [[round(p["geo"][1], 3), round(p["geo"][0], 3)] for p in t["posts"] if p.get("geo")]
-            geo = [g for i, g in enumerate(geo) if i == 0 or g != geo[i - 1]]
-            segs, cur = [], []
-            for g in geo:
-                if cur and math.hypot(g[0] - cur[-1][0], (g[1] - cur[-1][1])) > 9:
-                    segs.append(cur)
-                    cur = []
-                cur.append(g)
-            if cur:
-                segs.append(cur)
-            lines, dashed = [sg for sg in segs if len(sg) > 1], True
+        segs = trip_segments(t)
+        by_mode = {}
+        for sg in segs:
+            by_mode[sg["m"]] = by_mode.get(sg["m"], 0) + sg["km"]
+            if sg["m"] in ("velo", "pied"):
+                km_self += sg["km"]
         for p in t["posts"]:
             seen_c.update(countries_of(p))
         n_posts += len(t["posts"])
         out.append({
             "slug": t["slug"], "title": t["title"]["fr"], "period": t["period"]["fr"], "color": t["color"],
             "mode": t.get("mode", "roadtrip"), "url": B.trip_url(t, "fr"), "year": t["start"].year,
-            "flags": trip_flags(t, 18), "lines": lines, "dashed": dashed,
+            "flags": trip_flags(t, 18),
+            "segs": [{"m": sg["m"], "n": sg.get("n", ""), "g": 1 if sg.get("guess") else 0,
+                      "c": [[round(p[1], 3), round(p[0], 3)] for p in sg["pts"]]} for sg in segs],
+            "modes": {k: round(v) for k, v in by_mode.items()},
             "pins": [[round(p["geo"][1], 3), round(p["geo"][0], 3)] for p in t["posts"] if p.get("geo")],
-            "km": round(km_bike), "countries": len(seen_c), "stories": n_posts,
+            "km": round(km_self), "countries": len(seen_c), "stories": n_posts,
         })
     return out
 
@@ -159,11 +221,11 @@ def page_globe(trips, posts):
 <div><dt>pays</dt><dd data-k="countries">0</dd></div>
 <div><dt>récits</dt><dd data-k="stories">0</dd></div>
 </dl>
-<ol class="gl-line" aria-label="Les voyages, dans l'ordre"></ol>
+<ul class="gl-legend" aria-label="Moyens de transport du voyage"></ul>\n<ol class="gl-line" aria-label="Les voyages, dans l'ordre"></ol>
 <div class="gl-ctrl"><button type="button" class="gl-play" aria-pressed="true">Pause</button><button type="button" class="gl-replay">Rejouer depuis 2015</button></div>
 </div>
 </section>
-<section class="wrap gl-after"><p>Les voyages sans trace GPS (avant 2020) sont dessinés en pointillés, d'un récit à l'autre. Cliquez sur une année pour y revenir.</p></section>"""
+<section class="wrap gl-after"><p>Les traits pleins sont nos traces GPS à vélo et à pied. Entre elles, les trains, cars, voitures, bateaux et avions racontés dans les récits relient les étapes. Cliquez sur une année pour y revenir.</p></section>"""
     scripts = ('<script src="/assets/labs/vendor/d3-array.min.js"></script>\n<script src="/assets/labs/vendor/d3-geo.min.js"></script>\n'
                '<script src="/assets/labs/vendor/topojson-client.min.js"></script>\n<script src="/assets/labs/globe.js?v=' + B.VERSION + '" defer></script>')
     lab_layout("/labs/accueil/", "Prototype · accueil", body, scripts=scripts, body_class="labs-globe")
