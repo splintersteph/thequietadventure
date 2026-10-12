@@ -160,14 +160,26 @@
     "match": {"categories": ["new-zealand"]}
   },
   {
+    "slug": "floride-et-louisiane",
+    "en_slug": "florida-and-louisiana",
+    "mode": "roadtrip",
+    "title": {"fr": "La Floride et la Louisiane", "en": "Florida and Louisiana"},
+    "period": {"fr": "Mars 2019", "en": "March 2019"},
+    "lead": {
+      "fr": "Quelques jours à Miami et en Floride, puis l'avion pour La Nouvelle-Orléans, les plantations de la River Road et le pays cajun.",
+      "en": "A few days in Miami and around Florida, then a flight to New Orleans, the River Road plantations and Cajun country."
+    },
+    "match": {"categories": ["usa"], "from": "2019-03-01", "to": "2019-03-13"}
+  },
+  {
     "slug": "ouest-americain",
     "en_slug": "american-west",
     "mode": "roadtrip",
     "title": {"fr": "Road trip dans l'Ouest américain", "en": "American West road trip"},
     "period": {"fr": "Février – mars 2018", "en": "February – March 2018"},
     "lead": {
-      "fr": "La Highway 1, San Francisco, Las Vegas, Zion, Antelope Canyon et la Route 66 — puis un détour par La Nouvelle-Orléans.",
-      "en": "Highway 1, San Francisco, Las Vegas, Zion, Antelope Canyon and Route 66 — and later a detour to New Orleans."
+      "fr": "La Highway 1, San Francisco, Las Vegas, Zion, Antelope Canyon et la Route 66.",
+      "en": "Highway 1, San Francisco, Las Vegas, Zion, Antelope Canyon and Route 66."
     },
     "match": {"categories": ["usa"]}
   },
@@ -211,11 +223,11 @@
     "slug": "colombie",
     "en_slug": "colombia",
     "mode": "roadtrip",
-    "title": {"fr": "Bogotá", "en": "Bogotá"},
-    "period": {"fr": "Mars 2019", "en": "March 2019"},
+    "title": {"fr": "La Colombie", "en": "Colombia"},
+    "period": {"fr": "14 mars – 14 mai 2019", "en": "14 March – 14 May 2019"},
     "lead": {
-      "fr": "L'or, le street-art et la vie quotidienne de la capitale colombienne.",
-      "en": "Gold, street art and everyday life in the Colombian capital."
+      "fr": "Deux mois à travers le pays : Bogotá, les villages de Boyacá et du Santander, deux semaines d'école à Palomino, la Sierra Nevada, Cartagena, Medellín et les villages du café.",
+      "en": "Two months across the country: Bogotá, the villages of Boyacá and Santander, two weeks volunteering at a school in Palomino, the Sierra Nevada, Cartagena, Medellín and the coffee villages."
     },
     "match": {"categories": ["colombia"]}
   },
