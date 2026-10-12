@@ -112,16 +112,40 @@
     "match": {"categories": ["voyages-a-velo"], "from": "2022-09-01", "to": "2022-09-30"}
   },
   {
-    "slug": "echappees-a-velo-en-france",
-    "en_slug": "cycling-getaways-in-france",
+    "slug": "via-allier-a-velo",
+    "en_slug": "via-allier-by-bike",
     "mode": "velo",
-    "title": {"fr": "Échappées à vélo en France", "en": "Cycling getaways in France"},
-    "period": {"fr": "2021 – 2025", "en": "2021 – 2025"},
+    "title": {"fr": "La Via Allier à vélo", "en": "The Via Allier by bike"},
+    "period": {"fr": "Août 2023", "en": "August 2023"},
     "lead": {
-      "fr": "De Marseille à Lyon, la Via Allier, un week-end en Provence et nos conseils pour voyager à vélo avec un enfant.",
-      "en": "Marseille to Lyon, the Via Allier, a weekend in Provence and our tips for cycle touring with a child."
+      "fr": "De Langogne à Clermont-Ferrand, au fil des gorges de l'Allier : du dénivelé, de la fraîcheur, de beaux paysages et peu de touristes.",
+      "en": "From Langogne to Clermont-Ferrand along the Allier gorges: climbs, cool air, beautiful scenery and few tourists."
     },
-    "match": {"categories": ["voyages-a-velo", "vie-quotidienne"], "from": "2021-01-01", "notcategories": ["australia"]}
+    "match": {"categories": ["voyages-a-velo"], "from": "2023-08-01", "to": "2023-08-31"}
+  },
+  {
+    "slug": "provence-a-velo",
+    "en_slug": "provence-by-bike",
+    "mode": "velo",
+    "title": {"fr": "Un week-end en Provence à vélo", "en": "A weekend in Provence by bike"},
+    "period": {"fr": "Avril 2023", "en": "April 2023"},
+    "lead": {
+      "fr": "Le week-end de Pâques en famille depuis Avignon : Saint-Rémy-de-Provence, le pont du Gard et les voies vertes.",
+      "en": "The Easter weekend as a family from Avignon: Saint-Rémy-de-Provence, the Pont du Gard and the greenways."
+    },
+    "match": {"categories": ["voyages-a-velo"], "from": "2023-04-01", "to": "2023-04-30"}
+  },
+  {
+    "slug": "marseille-lyon-a-velo",
+    "en_slug": "marseille-to-lyon-by-bike",
+    "mode": "velo",
+    "title": {"fr": "De Marseille à Lyon à vélo", "en": "Marseille to Lyon by bike"},
+    "period": {"fr": "Octobre 2021", "en": "October 2021"},
+    "lead": {
+      "fr": "Notre premier voyage à vélo, une dernière folie avant l'arrivée de bébé : la remontée de la vallée du Rhône, et toutes les erreurs de débutants possibles.",
+      "en": "Our first cycling trip, one last adventure before the baby arrived: up the Rhône valley, making every beginner's mistake in the book."
+    },
+    "match": {"categories": ["voyages-a-velo"], "from": "2021-09-01", "to": "2021-12-31"}
   },
   {
     "slug": "australie",

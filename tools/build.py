@@ -117,7 +117,7 @@ REGIONS = {
     "coree-a-velo": ["asie"], "kyushu-a-velo": ["asie"], "japon-2018": ["asie"], "bali": ["asie"],
     "retour-en-europe-a-velo": ["europe"], "suisse-en-train": ["europe"],
     "belle-via-et-vercors": ["france"], "gorges-du-tarn-a-velo": ["france"], "passa-pais": ["france"],
-    "toulouse-bordeaux-a-velo": ["france"], "echappees-a-velo-en-france": ["france"],
+    "toulouse-bordeaux-a-velo": ["france"], "marseille-lyon-a-velo": ["france"], "provence-a-velo": ["france"], "via-allier-a-velo": ["france"],
     "australie": ["oceanie"], "nouvelle-zelande": ["oceanie"],
     "ouest-americain": ["amerique"], "floride-et-louisiane": ["amerique"], "quebec": ["amerique"], "canada-2020": ["amerique"], "colombie": ["amerique"],
     "escapades": ["asie", "europe"],
@@ -1052,7 +1052,7 @@ def feeds(posts, trips):
 
 OLD_CATEGORIES = {
     "asia": "/voyages/", "europe": "/voyages/", "north-america": "/voyages/", "oceania": "/voyages/", "south-america": "/voyages/colombie/",
-    "road-trips": "/voyages/", "vie-quotidienne": "/voyages/echappees-a-velo-en-france/", "africa": "/voyages/", "non-categorise": "/archives/",
+    "road-trips": "/voyages/", "vie-quotidienne": "/voyages/", "africa": "/voyages/", "non-categorise": "/archives/",
     "asia/china": "/voyages/australie/", "asia/indonesie": "/voyages/bali/", "asia/japan": "/voyages/kyushu-a-velo/", "asia/malaisia": "/voyages/",
     "asia/philippines": "/voyages/escapades/", "asia/south-korea": "/voyages/coree-a-velo/", "asia/sri-lanka": "/voyages/escapades/",
     "asia/south-korea/east-coast": "/voyages/coree-a-velo/", "asia/south-korea/jeju-island": "/voyages/coree-a-velo/",
@@ -1109,6 +1109,8 @@ def main():
         VT.search_index(posts, lang)
         VT.page_passport(lang, posts)
     redirect("/labs/", "/")
+    redirect("/voyages/echappees-a-velo-en-france/", "/voyages/")  # voyage scindé en trois
+    redirect("/en/journeys/cycling-getaways-in-france/", "/en/journeys/")
     VT.save_lqip()
     open(os.path.join(OUT, ".nojekyll"), "w").close()
     print(f"Site construit : {len(posts)} récits, {len(trips)} voyages"

@@ -54,7 +54,9 @@ DECOR = {
     "gorges-du-tarn-a-velo": ("mountains", "butterflies", {"fr": "TARN · LOZÈRE", "en": "TARN · LOZÈRE"}),
     "passa-pais": ("pine", "leaves", {"fr": "HAUT-LANGUEDOC", "en": "HAUT-LANGUEDOC"}),
     "toulouse-bordeaux-a-velo": ("canal", "butterflies", {"fr": "CANAL DE GARONNE", "en": "GARONNE CANAL"}),
-    "echappees-a-velo-en-france": ("lavender", "butterflies", {"fr": "FRANCE", "en": "FRANCE"}),
+    "marseille-lyon-a-velo": ("cypress", "butterflies", {"fr": "VALLÉE DU RHÔNE", "en": "RHÔNE VALLEY"}),
+    "provence-a-velo": ("lavender", "butterflies", {"fr": "PROVENCE", "en": "PROVENCE"}),
+    "via-allier-a-velo": ("mountains", "leaves", {"fr": "VIA ALLIER", "en": "VIA ALLIER"}),
     "australie": ("sun", "heat", {"fr": "AUSTRALIE", "en": "AUSTRALIA"}),
     "bali": ("terraces", "frangipani", {"fr": "BALI · INDONÉSIE", "en": "BALI · INDONESIA"}),
     "nouvelle-zelande": ("koru", "snow", {"fr": "NOUVELLE-ZÉLANDE", "en": "NEW ZEALAND"}),
@@ -148,7 +150,7 @@ def post_decor(trip, lang):
 TRIP_FLAGS = {
     "coree-a-velo": ["kr"], "kyushu-a-velo": ["jp"], "retour-en-europe-a-velo": ["hr", "si", "it"],
     "suisse-en-train": ["ch"], "belle-via-et-vercors": ["fr"], "gorges-du-tarn-a-velo": ["fr"], "passa-pais": ["fr"],
-    "toulouse-bordeaux-a-velo": ["fr"], "echappees-a-velo-en-france": ["fr"], "australie": ["au"], "bali": ["id"],
+    "toulouse-bordeaux-a-velo": ["fr"], "marseille-lyon-a-velo": ["fr"], "provence-a-velo": ["fr"], "via-allier-a-velo": ["fr"], "australie": ["au"], "bali": ["id"],
     "nouvelle-zelande": ["nz"], "ouest-americain": ["us"], "floride-et-louisiane": ["us"], "japon-2018": ["jp"], "quebec": ["ca"], "canada-2020": ["ca"],
     "colombie": ["co"], "escapades": ["lk", "ph", "me"],
 }
