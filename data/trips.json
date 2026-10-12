@@ -53,8 +53,8 @@
     "title": {"fr": "La Suisse en train", "en": "Switzerland by train"},
     "period": {"fr": "Octobre 2024", "en": "October 2024"},
     "lead": {
-      "fr": "Six jours, du lac de Neuchâtel au Bernina Express.",
-      "en": "Six days, from Lake Neuchâtel to the Bernina Express."
+      "fr": "Six jours : en voiture jusqu'au lac de Neuchâtel et à Coire, puis en train par l'Albula et le Bernina jusqu'à Tirano, en Italie.",
+      "en": "Six days: by car to Lake Neuchâtel and Chur, then by train over the Albula and Bernina lines to Tirano, in Italy."
     },
     "cover": "/assets/img/trips/suisse.jpg",
     "book": "suisse",
