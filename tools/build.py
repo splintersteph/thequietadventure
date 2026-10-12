@@ -504,7 +504,7 @@ def layout(lang, path, title, desc, content, alt_path=None, image=None, active=N
 def asset_version():
     import hashlib
     h = hashlib.md5()
-    for f in ("assets/css/site.css", "assets/js/site.js"):
+    for f in ("assets/css/site.css", "assets/js/site.js", "assets/labs/labs.css", "assets/labs/labs.js"):
         h.update(open(os.path.join(ROOT, f), "rb").read())
     return h.hexdigest()[:8]
 
@@ -1064,6 +1064,8 @@ def main():
     if os.path.exists(os.path.join(ROOT, "CNAME")):
         shutil.copy(os.path.join(ROOT, "CNAME"), os.path.join(OUT, "CNAME"))
     write_tracks(trips)
+    import labs
+    labs.build(posts, trips, books)
     open(os.path.join(OUT, ".nojekyll"), "w").close()
     print(f"Site construit : {len(posts)} récits, {len(trips)} voyages"
           + (f", {len(leftovers)} récits hors voyage : " + ", ".join(p['slug'] for p in leftovers) if leftovers else ""))

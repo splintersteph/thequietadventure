@@ -27,7 +27,7 @@ jobs:
       - name: Construire le site
         env:
           BASE_PATH: ${{ steps.pages.outputs.base_path }}
-        run: python tools/build.py
+        run: pip install -q pillow && python tools/build.py
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
