@@ -881,18 +881,20 @@ img[data-lq] { background-size: cover; background-position: center; background-r
 .fz-m { position: absolute; left: var(--x); font-family: var(--hand); font-size: 21px; color: var(--muted); white-space: nowrap; }
 .fz-hint { margin: 4px 0 0; font-size: 14px; color: var(--muted); }
 
-/* ---------- Ce jour-là ---------- */
-.otd { padding: 36px 0 8px; }
-.otd-card { --k: var(--forest); display: grid; grid-template-columns: 240px 1fr; max-width: 900px; margin: 0 auto; background: var(--card); box-shadow: var(--shadow); text-decoration: none; color: var(--ink); border-left: 5px solid var(--k); transform: rotate(-.35deg); transition: transform .3s ease, box-shadow .3s ease; }
-.otd-card:hover { transform: rotate(0) translateY(-3px); color: var(--ink); box-shadow: 0 1px 0 #E2D7C3, 0 18px 34px rgba(60, 45, 30, .14); }
-.otd-img { min-height: 180px; background: var(--paper-deep) center / cover no-repeat; }
-.otd-txt { padding: 20px 28px 22px; display: flex; flex-direction: column; gap: 6px; }
-.otd-txt .kicker { margin: 0; }
-.otd-when { font-family: var(--hand); font-size: 25px; line-height: 1.15; color: var(--k); }
-.otd-title { font-family: var(--serif); font-weight: 400; font-size: 27px; line-height: 1.15; }
-.otd-ex { color: var(--ink-soft); font-size: 15.5px; line-height: 1.55; }
-.otd-go { font-weight: 700; color: var(--forest); }
-@media (max-width: 640px) { .otd-card { grid-template-columns: 1fr; } .otd-img { min-height: 190px; } }
+/* ---------- Cette semaine-là ---------- */
+.otd { padding: 56px 0 24px; }
+.otd-h { max-width: 640px; }
+.otd-list { display: flex; gap: 20px; overflow-x: auto; padding: 6px 4px 22px; margin: 0 -4px; scroll-snap-type: x mandatory; scrollbar-width: thin; }
+.otd-card { --k: var(--forest); flex: 0 0 272px; scroll-snap-align: start; display: flex; flex-direction: column; background: var(--card); box-shadow: var(--shadow); text-decoration: none; color: var(--ink); border-top: 5px solid var(--k); transition: transform .3s ease, box-shadow .3s ease; }
+.otd-card:nth-child(odd) { transform: rotate(-.6deg); } .otd-card:nth-child(even) { transform: rotate(.5deg); }
+.otd-card:hover { transform: rotate(0) translateY(-4px); color: var(--ink); box-shadow: 0 1px 0 #E2D7C3, 0 18px 34px rgba(60, 45, 30, .14); }
+.otd-img { height: 170px; background: var(--paper-deep) center / cover no-repeat; }
+.otd-txt { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.otd-when { font-family: var(--hand); font-size: 25px; line-height: 1.1; color: var(--k); }
+.otd-date { font-size: 13px; color: var(--muted); }
+.otd-title { font-family: var(--serif); font-weight: 400; font-size: 21px; line-height: 1.2; margin-top: 4px; flex: 1; }
+.otd-go { margin-top: 8px; font-weight: 700; font-size: 14px; color: var(--forest); }
+@media (max-width: 640px) { .otd-card { flex-basis: 78vw; } }
 
 /* ---------- Pages pays ---------- */
 .cty-hero h1 { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }

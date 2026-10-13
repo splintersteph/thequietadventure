@@ -539,7 +539,7 @@
 })();
 
 
-/* « Ce jour-là » : un récit écrit à la même date, une autre année */
+/* « Cette semaine-là » : les récits écrits la même semaine, les années passées */
 (function () {
   var el = document.getElementById("otd-data");
   if (!el) return;
@@ -548,28 +548,35 @@
   var now = new Date(), y = now.getFullYear();
   function doy(m, d) { return Math.round((Date.UTC(2001, m - 1, d) - Date.UTC(2001, 0, 1)) / 864e5); }
   var today = doy(now.getMonth() + 1, now.getDate());
-  var best = [], bestGap = 99;
+  var byPost = {};
   D.rows.forEach(function (r) {
     var ry = +r.d.slice(0, 4);
     if (ry >= y) return;
     var g = Math.abs(doy(+r.d.slice(5, 7), +r.d.slice(8, 10)) - today);
     g = Math.min(g, 365 - g);
-    if (g > 4) return;
-    if (g < bestGap) { bestGap = g; best = [r]; } else if (g === bestGap) best.push(r);
+    if (g > 3) return;
+    var k = r.u.split("#")[0];
+    if (!byPost[k] || g < byPost[k].g) byPost[k] = { r: r, g: g };
   });
-  if (!best.length) return;
-  var r = best[(now.getDate() + now.getMonth() * 31) % best.length];
-  var n = y - +r.d.slice(0, 4);
-  var when = bestGap === 0 ? (n === 1 ? D.t.years[0] : D.t.years[1].replace("{n}", n)) : D.t.near.replace("{n}", n);
-  var dt = new Date(r.d + "T12:00:00");
-  var nice = dt.toLocaleDateString(D.lang === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "long", year: "numeric" });
-  var sec = el.parentNode, a = sec.querySelector(".otd-card");
-  a.href = r.u;
-  a.style.setProperty("--k", r.k);
-  if (r.c) sec.querySelector(".otd-img").style.backgroundImage = "url('" + r.c + "')";
-  sec.querySelector(".otd-when").textContent = when + " · " + nice + (r.v ? " · " + r.v : "");
-  sec.querySelector(".otd-title").textContent = r.t;
-  sec.querySelector(".otd-ex").textContent = r.e;
-  sec.querySelector(".otd-go").textContent = D.t.read;
+  var list = Object.keys(byPost).map(function (k) { return byPost[k].r; });
+  if (!list.length) return;
+  list.sort(function (a, b) { return a.d < b.d ? 1 : -1; });
+  var loc = D.lang === "fr" ? "fr-FR" : "en-GB";
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  var html = list.slice(0, 12).map(function (r) {
+    var n = y - +r.d.slice(0, 4);
+    var when = n === 1 ? D.t.years[0] : D.t.years[1].replace("{n}", n);
+    var nice = new Date(r.d + "T12:00:00").toLocaleDateString(loc, { day: "numeric", month: "long", year: "numeric" });
+    return '<a class="otd-card" href="' + esc(r.u) + '" style="--k:' + esc(r.k) + '">' +
+      '<span class="otd-img"' + (r.c ? ' style="background-image:url(\'' + esc(r.c) + '\')"' : "") + '></span>' +
+      '<span class="otd-txt"><span class="otd-when">' + esc(when) + '</span><span class="otd-date">' + esc(nice) + (r.v ? " · " + esc(r.v) : "") + '</span>' +
+      '<b class="otd-title">' + esc(r.t) + '</b><span class="otd-go">' + esc(D.t.read) + '</span></span></a>';
+  }).join("");
+  var sec = el.parentNode;
+  sec.querySelector(".otd-list").innerHTML = html;
+  var a0 = new Date(now), a1 = new Date(now);
+  a0.setDate(a0.getDate() - 3); a1.setDate(a1.getDate() + 3);
+  var o = { day: "numeric", month: "long" };
+  sec.querySelector(".otd-range").textContent = a0.toLocaleDateString(loc, o) + " – " + a1.toLocaleDateString(loc, o);
   sec.hidden = false;
 })();

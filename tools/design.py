@@ -183,13 +183,13 @@ def collect_days(posts):
 # ------------------------------------------------------------------ 3. la frise d'un voyage
 S = {
     "fr": {"frise": "Le voyage, jour après jour", "frise_n": "jours racontés", "frise_hint": "Chaque point est un jour raconté : cliquez pour le lire.",
-           "otd_kicker": "Ce jour-là", "otd_years": ["Il y a un an", "Il y a {n} ans"], "otd_near": "À quelques jours près, il y a {n} ans",
-           "otd_read": "Relire ce jour →", "country_kicker": "Pays", "country_trips": "Les voyages", "country_stories": "Tous les récits",
+           "otd_kicker": "Cette semaine-là", "otd_title": "Ce que nous vivions à la même époque, les autres années",
+           "otd_years": ["Il y a un an", "Il y a {n} ans"], "otd_read": "Relire →", "country_kicker": "Pays", "country_trips": "Les voyages", "country_stories": "Tous les récits",
            "country_map": "Les récits sur la carte", "countries": "Les pays", "first_visit": "Première visite",
            "country_lead": "{n} récits, de {a} à {b}.", "country_lead_y": "{n} récits, en {a}.", "country_lead1": "Un récit, en {a}."},
     "en": {"frise": "The journey, day by day", "frise_n": "days told", "frise_hint": "Each dot is a day we wrote about: click to read it.",
-           "otd_kicker": "On this day", "otd_years": ["One year ago", "{n} years ago"], "otd_near": "Give or take a few days, {n} years ago",
-           "otd_read": "Read that day again →", "country_kicker": "Country", "country_trips": "Journeys", "country_stories": "All the stories",
+           "otd_kicker": "This week, years ago", "otd_title": "Where we were at this time of year",
+           "otd_years": ["One year ago", "{n} years ago"], "otd_read": "Read again →", "country_kicker": "Country", "country_trips": "Journeys", "country_stories": "All the stories",
            "country_map": "The stories on the map", "countries": "Countries", "first_visit": "First visit",
            "country_lead": "{n} stories, from {a} to {b}.", "country_lead_y": "{n} stories, in {a}.", "country_lead1": "One story, in {a}."},
 }
@@ -255,11 +255,11 @@ def on_this_day(posts, lang):
         else:
             rows.append(dict(base, d=p["dt"].date().isoformat(), u=v["url"]))
     s = S[lang]
-    data = json.dumps({"rows": rows, "t": {"years": s["otd_years"], "near": s["otd_near"], "read": s["otd_read"]},
+    data = json.dumps({"rows": rows, "t": {"years": s["otd_years"], "read": s["otd_read"]},
                        "lang": lang}, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
-    return f"""<section class="otd" hidden><div class="wrap"><a class="otd-card" href="#">
-<span class="otd-img"></span><span class="otd-txt"><span class="kicker">{s['otd_kicker']}</span><span class="otd-when"></span>
-<b class="otd-title"></b><span class="otd-ex"></span><span class="otd-go"></span></span></a></div>
+    return f"""<section class="otd" hidden><div class="wrap">
+<div class="sec-head"><div><p class="kicker">{s['otd_kicker']}</p><h2 class="h-sec otd-h">{s['otd_title']}</h2></div><p class="aside otd-range"></p></div>
+<div class="otd-list"></div></div>
 <script type="application/json" id="otd-data">{data}</script></section>"""
 
 
