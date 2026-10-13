@@ -66,7 +66,9 @@ DECOR = {
     "quebec": ("maple", "maple", {"fr": "QUÉBEC", "en": "QUÉBEC"}),
     "canada-2020": ("pine", "leaves", {"fr": "CANADA", "en": "CANADA"}),
     "colombie": ("coffee", "butterflies", {"fr": "COLOMBIE", "en": "COLOMBIA"}),
-    "escapades": ("compass", None, {"fr": "ESCAPADES", "en": "SHORT TRIPS"}),
+    "sri-lanka": ("terraces", "frangipani", {"fr": "SRI LANKA", "en": "SRI LANKA"}),
+    "philippines": ("sun", "frangipani", {"fr": "PHILIPPINES", "en": "PHILIPPINES"}),
+    "montenegro": ("mountains", "butterflies", {"fr": "MONTÉNÉGRO", "en": "MONTENEGRO"}),
 }
 
 PARTICLES = {
@@ -152,7 +154,7 @@ TRIP_FLAGS = {
     "suisse-en-train": ["ch"], "belle-via-et-vercors": ["fr"], "gorges-du-tarn-a-velo": ["fr"], "passa-pais": ["fr"],
     "toulouse-bordeaux-a-velo": ["fr"], "marseille-lyon-a-velo": ["fr"], "provence-a-velo": ["fr"], "via-allier-a-velo": ["fr"], "australie": ["au"], "bali": ["id"],
     "nouvelle-zelande": ["nz"], "ouest-americain": ["us"], "floride-et-louisiane": ["us"], "japon-2018": ["jp"], "quebec": ["ca"], "canada-2020": ["ca"],
-    "colombie": ["co"], "escapades": ["lk", "ph", "me"],
+    "colombie": ["co"], "sri-lanka": ["lk"], "philippines": ["ph"], "montenegro": ["me"],
 }
 CAT_FLAGS = {
     "south-korea": "kr", "japan": "jp", "croatie": "hr", "slovenie": "si", "italie": "it", "suisse": "ch", "france": "fr",

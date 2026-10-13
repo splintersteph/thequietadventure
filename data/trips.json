@@ -257,15 +257,39 @@
     "match": {"categories": ["colombia"]}
   },
   {
-    "slug": "escapades",
-    "en_slug": "short-trips",
-    "mode": "roadtrip",
-    "title": {"fr": "Escapades", "en": "Short trips"},
-    "period": {"fr": "2015 – 2021", "en": "2015 – 2021"},
+    "slug": "sri-lanka",
+    "en_slug": "sri-lanka",
+    "mode": "train",
+    "title": {"fr": "Le Sri Lanka en train", "en": "Sri Lanka by train"},
+    "period": {"fr": "Août 2015", "en": "August 2015"},
     "lead": {
-      "fr": "Le train de Haputale à Kandy au Sri Lanka, les imprévus de Coron aux Philippines et nos plus belles photos du Monténégro.",
-      "en": "The train from Haputale to Kandy in Sri Lanka, mishaps in Coron in the Philippines and our favourite photos of Montenegro."
+      "fr": "De Haputale à Kandy, la ligne des plantations de thé, au rythme lent du train.",
+      "en": "From Haputale to Kandy along the tea-plantation line, at the slow pace of the train."
     },
-    "match": {"categories": ["sri-lanka", "philippines", "montenegro"]}
+    "match": {"categories": ["sri-lanka"]}
+  },
+  {
+    "slug": "philippines",
+    "en_slug": "philippines",
+    "mode": "roadtrip",
+    "title": {"fr": "Coron, aux Philippines", "en": "Coron, in the Philippines"},
+    "period": {"fr": "Décembre 2018", "en": "December 2018"},
+    "lead": {
+      "fr": "Six heures de bateau depuis Palawan, une intoxication et des rencontres inattendues sur l'île de Coron.",
+      "en": "Six hours by boat from Palawan, a bout of food poisoning and unexpected encounters on the island of Coron."
+    },
+    "match": {"categories": ["philippines"]}
+  },
+  {
+    "slug": "montenegro",
+    "en_slug": "montenegro",
+    "mode": "roadtrip",
+    "title": {"fr": "Le Monténégro", "en": "Montenegro"},
+    "period": {"fr": "Automne 2021", "en": "Autumn 2021"},
+    "lead": {
+      "fr": "Kotor, le mont Lovćen et les bouches de Kotor : nos plus belles images d'un pays fabuleusement beau.",
+      "en": "Kotor, Mount Lovćen and the Bay of Kotor: our favourite pictures of a fabulously beautiful country."
+    },
+    "match": {"categories": ["montenegro"]}
   }
 ]

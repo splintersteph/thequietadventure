@@ -120,7 +120,7 @@ REGIONS = {
     "toulouse-bordeaux-a-velo": ["france"], "marseille-lyon-a-velo": ["france"], "provence-a-velo": ["france"], "via-allier-a-velo": ["france"],
     "australie": ["oceanie"], "nouvelle-zelande": ["oceanie"],
     "ouest-americain": ["amerique"], "floride-et-louisiane": ["amerique"], "quebec": ["amerique"], "canada-2020": ["amerique"], "colombie": ["amerique"],
-    "escapades": ["asie", "europe"],
+    "sri-lanka": ["asie"], "philippines": ["asie"], "montenegro": ["europe"],
 }
 REGION_NAMES = {
     "fr": {"france": "France", "europe": "Europe", "asie": "Asie", "oceanie": "Océanie", "amerique": "Amériques"},
@@ -1076,12 +1076,12 @@ OLD_CATEGORIES = {
     "asia": "/voyages/", "europe": "/voyages/", "north-america": "/voyages/", "oceania": "/voyages/", "south-america": "/voyages/colombie/",
     "road-trips": "/voyages/", "vie-quotidienne": "/voyages/", "africa": "/voyages/", "non-categorise": "/archives/",
     "asia/china": "/voyages/australie/", "asia/indonesie": "/voyages/bali/", "asia/japan": "/voyages/kyushu-a-velo/", "asia/malaisia": "/voyages/",
-    "asia/philippines": "/voyages/escapades/", "asia/south-korea": "/voyages/coree-a-velo/", "asia/sri-lanka": "/voyages/escapades/",
+    "asia/philippines": "/voyages/philippines/", "asia/south-korea": "/voyages/coree-a-velo/", "asia/sri-lanka": "/voyages/sri-lanka/",
     "asia/south-korea/east-coast": "/voyages/coree-a-velo/", "asia/south-korea/jeju-island": "/voyages/coree-a-velo/",
     "asia/south-korea/seomjingang": "/voyages/coree-a-velo/", "asia/south-korea/seoul-to-busan": "/voyages/coree-a-velo/",
     "asia/south-korea/yeongsangang": "/voyages/coree-a-velo/",
     "europe/croatie": "/voyages/retour-en-europe-a-velo/", "europe/france": "/voyages/", "europe/france/voyages-a-velo": "/voyages/",
-    "europe/italie": "/voyages/retour-en-europe-a-velo/", "europe/montenegro": "/voyages/escapades/", "europe/slovenie": "/voyages/retour-en-europe-a-velo/",
+    "europe/italie": "/voyages/retour-en-europe-a-velo/", "europe/montenegro": "/voyages/montenegro/", "europe/slovenie": "/voyages/retour-en-europe-a-velo/",
     "europe/suisse": "/voyages/suisse-en-train/",
     "north-america/canada": "/voyages/quebec/", "north-america/canada/british-columbia": "/voyages/canada-2020/",
     "north-america/canada/ontario": "/voyages/canada-2020/", "north-america/canada/quebec": "/voyages/quebec/",
@@ -1133,6 +1133,8 @@ def main():
         VT.page_passport(lang, posts)
         DZ.pages_countries(posts, lang)
     redirect("/labs/", "/")
+    redirect("/voyages/escapades/", "/voyages/")  # scindé en Sri Lanka, Philippines, Monténégro
+    redirect("/en/journeys/short-trips/", "/en/journeys/")
     redirect("/voyages/echappees-a-velo-en-france/", "/voyages/")  # voyage scindé en trois
     redirect("/en/journeys/cycling-getaways-in-france/", "/en/journeys/")
     VT.save_lqip()

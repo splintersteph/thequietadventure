@@ -1,9 +1,13 @@
 {
   "_doc": "Liaisons entre les traces GPS, tirées des récits. pts en [lat, lng] ; 'prev' = fin du tronçon précédent, 'next' = début du suivant. Modes : velo, pied, train, bus, voiture, bateau, avion. 'guess' = moyen de transport supposé, non écrit dans le récit.",
-  "escapades": [
-    {"d": "2015-08-23", "m": "train", "n": "Haputale → Kandy", "pts": [[6.7685, 80.9573], [6.8318, 80.8606], [6.9469, 80.7480], [6.8916, 80.5954], [7.0050, 80.5700], [7.1640, 80.5740], [7.2580, 80.5940], [7.2906, 80.6337]]},
+  "sri-lanka": [
+    {"d": "2015-08-23", "m": "train", "n": "Haputale → Kandy", "pts": [[6.7685, 80.9573], [6.8318, 80.8606], [6.9469, 80.7480], [6.8916, 80.5954], [7.0050, 80.5700], [7.1640, 80.5740], [7.2580, 80.5940], [7.2906, 80.6337]]}
+  ],
+  "philippines": [
     {"d": "2018-12-14", "m": "bateau", "n": "Palawan → Coron", "pts": [[11.1949, 119.4013], [11.6500, 119.7500], [11.9976, 120.2030]]},
     {"d": "2018-12-18", "m": "avion", "n": "Busuanga → Angeles", "pts": [[12.1215, 120.1000], [15.1860, 120.5600]]}
+  ],
+  "montenegro": [
   ],
   "australie": [
     {"d": "2017-01-10", "m": "avion", "n": "Paris → Xi'an", "pts": [[49.0097, 2.5479], [34.4471, 108.7516]]},
