@@ -888,6 +888,8 @@ def page_post(p, lang="fr"):
     prev_html = ""
     dbody = DZ.day_ids(p, render_body(v['body'], lang, trip=trip), lang)[0]
     rbody, route = VT.route_body(p, dbody, lang) if trip else (dbody, "")
+    if route:
+        rbody = DZ.day_sketches(rbody, p.get("acts"), trip["color"], lang)
     rbody = VT.lq_body(rbody)
     if trip:
         tp = trip["posts"]

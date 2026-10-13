@@ -321,3 +321,42 @@ def pages_countries(posts, lang):
 <section class="section" style="padding-top:0"><div class="wrap"><div class="sec-head"><div><p class="kicker">{s['country_stories']}</p></div></div>
 {groups}</div></section>"""
         B.write(url, B.layout(lang, url, name, lead, body, other, image=cover, active="passport"))
+
+
+# ------------------------------------------------------------------ 6. les tracés du jour, en dessin
+def day_sketches(body, acts, color, lang):
+    """À côté de chaque intertitre daté, la trace GPS du jour dessinée à la plume."""
+    if not acts:
+        return body
+    acts = sorted(acts, key=lambda a: a["date"])
+
+    def svg(i, j):
+        pts = []
+        for a in acts[i:j + 1]:
+            pts += X.rdp(B.decode_polyline(a["poly"]), 0.0004)
+        if len(pts) < 2:
+            return ""
+        import math
+        lat0 = sum(p[0] for p in pts) / len(pts)
+        k = math.cos(math.radians(lat0))
+        xs = [p[1] * k for p in pts]
+        ys = [-p[0] for p in pts]
+        w, h, pad = 150, 96, 8
+        sx = (w - 2 * pad) / max(1e-9, max(xs) - min(xs))
+        sy = (h - 2 * pad) / max(1e-9, max(ys) - min(ys))
+        sc = min(sx, sy)
+        ox = (w - (max(xs) - min(xs)) * sc) / 2
+        oy = (h - (max(ys) - min(ys)) * sc) / 2
+        c = [((x - min(xs)) * sc + ox, (y - min(ys)) * sc + oy) for x, y in zip(xs, ys)]
+        d = "M" + " L".join(f"{x:.1f} {y:.1f}" for x, y in c)
+        km = sum(a["dist"] for a in acts[i:j + 1]) / 1000
+        (x0, y0), (x1, y1) = c[0], c[-1]
+        return (f'<span class="h-sketch" aria-hidden="true"><svg viewBox="0 0 {w} {h}" width="{w}" height="{h}">'
+                f'<path class="hs-under" d="{d}"/><path class="hs-line" d="{d}" stroke="{color}" pathLength="1"/>'
+                f'<circle cx="{x0:.1f}" cy="{y0:.1f}" r="3" class="hs-a"/><circle cx="{x1:.1f}" cy="{y1:.1f}" r="3.6" fill="{color}"/></svg>'
+                f'<span class="hs-km">{B.fkm(km, lang)} km</span></span>')
+
+    def mark(m):
+        i, j = (int(x) for x in m.group(2).split(","))
+        return f'{m.group(1)}{m.group(3)}{svg(i, j)}</h4>'
+    return re.sub(r'(<h4[^>]*data-acts="(\d+,\d+)"[^>]*>)(.*?)</h4>', mark, body, flags=re.S)
