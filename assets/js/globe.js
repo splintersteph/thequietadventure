@@ -104,6 +104,70 @@
     }
     ctx.setLineDash([]);
   }
+
+  // ---------- les villes : les grandes partout, celles de nos voyages quand on zoome ----------
+  // [lon, lat, rang, nom fr, nom en] — rang 1 : toujours ; rang 2 : dès qu'on s'approche
+  var CITIES = [
+    [2.35, 48.86, 1, "Paris"], [-0.13, 51.51, 1, "Londres", "London"], [-74.0, 40.71, 1, "New York"], [-118.24, 34.05, 1, "Los Angeles"],
+    [139.69, 35.69, 1, "Tokyo"], [116.4, 39.9, 1, "Pékin", "Beijing"], [121.47, 31.23, 1, "Shanghai"], [37.62, 55.75, 1, "Moscou", "Moscow"],
+    [31.24, 30.04, 1, "Le Caire", "Cairo"], [72.88, 19.08, 1, "Mumbai"], [77.21, 28.61, 1, "Delhi"], [-46.63, -23.55, 1, "São Paulo"],
+    [-99.13, 19.43, 1, "Mexico", "Mexico City"], [-58.38, -34.6, 1, "Buenos Aires"], [3.38, 6.52, 1, "Lagos"], [28.98, 41.01, 1, "Istanbul"],
+    [126.98, 37.57, 1, "Séoul", "Seoul"], [151.21, -33.87, 1, "Sydney"], [100.5, 13.76, 1, "Bangkok"], [106.85, -6.21, 1, "Jakarta"],
+    [28.05, -26.2, 1, "Johannesburg"], [-77.04, -12.05, 1, "Lima"], [-74.08, 4.71, 1, "Bogotá"], [-79.38, 43.65, 1, "Toronto"],
+    [103.82, 1.35, 1, "Singapour", "Singapore"], [120.98, 14.6, 1, "Manille", "Manila"], [55.27, 25.2, 1, "Dubaï", "Dubai"],
+    [36.82, -1.29, 1, "Nairobi"], [12.5, 41.9, 1, "Rome"], [-3.7, 40.42, 1, "Madrid"], [13.4, 52.52, 1, "Berlin"], [-87.63, 41.88, 1, "Chicago"],
+    [-43.2, -22.9, 1, "Rio de Janeiro"], [18.42, -33.92, 1, "Le Cap", "Cape Town"], [144.96, -37.81, 1, "Melbourne"], [-123.12, 49.28, 1, "Vancouver"],
+    [-73.57, 45.5, 1, "Montréal", "Montreal"], [174.76, -36.85, 1, "Auckland"],
+    [5.37, 43.3, 2, "Marseille"], [4.84, 45.76, 2, "Lyon"], [6.14, 46.2, 2, "Genève", "Geneva"], [9.19, 45.46, 2, "Milan"],
+    [12.33, 45.44, 2, "Venise", "Venice"], [15.98, 45.81, 2, "Zagreb"], [14.5, 46.05, 2, "Ljubljana"], [153.03, -27.47, 2, "Brisbane"],
+    [115.86, -31.95, 2, "Perth"], [138.6, -34.93, 2, "Adélaïde", "Adelaide"], [130.84, -12.46, 2, "Darwin"], [145.77, -16.92, 2, "Cairns"],
+    [122.24, -17.96, 2, "Broome"], [174.78, -41.29, 2, "Wellington"], [172.64, -43.53, 2, "Christchurch"], [168.66, -45.03, 2, "Queenstown"],
+    [129.08, 35.18, 2, "Busan"], [128.59, 38.21, 2, "Sokcho"], [126.85, 35.16, 2, "Gwangju"], [126.53, 33.5, 2, "Jeju"],
+    [130.4, 33.59, 2, "Fukuoka"], [135.5, 34.69, 2, "Osaka"], [135.77, 35.01, 2, "Kyoto"], [132.46, 34.39, 2, "Hiroshima"],
+    [129.87, 32.75, 2, "Nagasaki"], [130.56, 31.6, 2, "Kagoshima"], [130.74, 32.8, 2, "Kumamoto"],
+    [-71.21, 46.81, 2, "Québec", "Quebec City"], [-75.7, 45.42, 2, "Ottawa"], [-114.07, 51.05, 2, "Calgary"], [-115.57, 51.18, 2, "Banff"],
+    [-118.08, 52.87, 2, "Jasper"], [-122.42, 37.77, 2, "San Francisco"], [-115.14, 36.17, 2, "Las Vegas"],
+    [-90.07, 29.95, 2, "La Nouvelle-Orléans", "New Orleans"], [-80.19, 25.76, 2, "Miami"], [-75.58, 6.24, 2, "Medellín"],
+    [-75.55, 10.39, 2, "Carthagène", "Cartagena"], [-74.2, 11.24, 2, "Santa Marta"], [115.22, -8.65, 2, "Denpasar"],
+    [79.86, 6.93, 2, "Colombo"], [80.64, 7.29, 2, "Kandy"], [18.77, 42.42, 2, "Kotor"], [8.54, 47.38, 2, "Zurich"],
+    [9.53, 46.85, 2, "Coire", "Chur"], [-0.58, 44.84, 2, "Bordeaux"], [1.44, 43.6, 2, "Toulouse"], [5.72, 45.19, 2, "Grenoble"],
+    [4.81, 43.95, 2, "Avignon"], [7.26, 43.7, 2, "Nice"], [3.08, 45.78, 2, "Clermont-Ferrand"], [11.34, 44.49, 2, "Bologne", "Bologna"],
+    [13.78, 45.65, 2, "Trieste"], [8.93, 44.41, 2, "Gênes", "Genoa"], [119.97, 12.0, 2, "Coron"]
+  ];
+  var EN = (I.locale || "").slice(0, 2) === "en";
+  function drawCities(sc) {
+    var boxes = [], minRank = view.k >= 1.7 ? 2 : 1;
+    var fs1 = 12, fs2 = 11;
+    var cx = W / 2, cy = W / 2;
+    ctx.textBaseline = "middle";
+    CITIES.forEach(function (c) {
+      if (c[2] > minRank) return;
+      var pt = [c[0], c[1]];
+      var dist = d3.geoDistance(pt, [view.lon, view.lat]);
+      if (dist > Math.PI / 2 - 0.12) return;
+      var xy = proj(pt);
+      if (Math.hypot(xy[0] - cx, xy[1] - cy) > R - 6) return;
+      var name = EN && c[4] ? c[4] : c[3];
+      var fs = c[2] === 1 ? fs1 : fs2;
+      ctx.font = (c[2] === 1 ? "italic " : "") + fs + "px Georgia, 'Times New Roman', serif";
+      var tw = ctx.measureText(name).width;
+      var left = xy[0] + 5 + tw > cx + Math.sqrt(Math.max(0, R * R - Math.pow(xy[1] - cy, 2))) - 4;
+      var x = left ? xy[0] - 5 - tw : xy[0] + 5, y = xy[1];
+      var box = [x - 2, y - fs / 2 - 1, x + tw + 2, y + fs / 2 + 1];
+      for (var i = 0; i < boxes.length; i++) {
+        var b = boxes[i];
+        if (box[0] < b[2] && box[2] > b[0] && box[1] < b[3] && box[3] > b[1]) return;
+      }
+      boxes.push(box, [xy[0] - 3, xy[1] - 3, xy[0] + 3, xy[1] + 3]);
+      var fade = Math.max(0, Math.min(1, (Math.PI / 2 - 0.12 - dist) / 0.35));
+      ctx.globalAlpha = 0.85 * fade;
+      ctx.beginPath(); ctx.arc(xy[0], xy[1], c[2] === 1 ? 1.9 : 1.5, 0, Math.PI * 2); ctx.fillStyle = col.ink; ctx.fill();
+      ctx.lineJoin = "round"; ctx.lineWidth = 3; ctx.strokeStyle = col.land; ctx.strokeText(name, x, y);
+      ctx.fillStyle = col.ink; ctx.globalAlpha = (c[2] === 1 ? 0.62 : 0.72) * fade; ctx.fillText(name, x, y);
+      ctx.globalAlpha = 1;
+    });
+  }
+
   function visible(pt) { return d3.geoDistance(pt, [view.lon, view.lat]) < Math.PI / 2 - 0.02; }
 
   function draw() {
@@ -157,6 +221,7 @@
         }
       }
     });
+    drawCities(sc);
     ctx.restore();
     // liseré du globe
     ctx.beginPath(); ctx.arc(W / 2, W / 2, Math.min(R, R * view.k), 0, Math.PI * 2);
