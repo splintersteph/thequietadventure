@@ -440,7 +440,8 @@ def page_passport(lang, posts):
         color = t["color"] if t else "#6B6157"
         mode = t.get("mode", "roadtrip") if t else "roadtrip"
         rot = ((i * 37) % 21) - 10
-        url = B.trip_url(t, lang) if t else B.PATHS[lang]["trips"]
+        import design
+        url = design.country_url(c, lang)
         d = e["first"]
         stamps += f"""<a class="ps-stamp {shapes[i % len(shapes)]}" href="{url}" style="--c:{color};--r:{rot}deg;--i:{i}">
 <span class="ps-in">{motif_svg(mode, 30, "currentColor", 2.4)}<b>{esc(COUNTRY_NAMES[c][0 if lang == 'fr' else 1])}</b><span class="ps-city">{esc(CAPITAL_CITY.get(c, ''))}</span>

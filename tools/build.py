@@ -18,7 +18,7 @@ import shutil
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from decor import hero_decor, motif_svg, post_decor, post_flags, stamp_svg, trip_flags  # noqa: E402
+from decor import hero_decor, motif_svg, post_decor, post_flags, flags_html, stamp_svg, trip_flags  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "_site")
@@ -150,6 +150,15 @@ class _Lazy:
 VT = _Lazy()
 
 
+class _LazyDesign:
+    def __getattr__(self, k):
+        import design
+        return getattr(design, k)
+
+
+DZ = _LazyDesign()
+
+
 # ------------------------------------------------------------------ data
 def media(src, width=1400):
     """Local file if fetched into media/, otherwise the WordPress CDN copy."""
@@ -238,7 +247,7 @@ def assign_trips(posts, trips):
         t["start"] = t["posts"][0]["dt"] if t["posts"] else None
         t["end"] = t["posts"][-1]["dt"] if t["posts"] else None
     for i, t in enumerate(trips):
-        t["color"] = PALETTE[i % len(PALETTE)]
+        t["color"] = t.get("color") or PALETTE[i % len(PALETTE)]
     return [t for t in trips if t["posts"]], leftovers
 
 
@@ -694,6 +703,8 @@ def page_home(lang, posts, trips, books):
 </figure>
 </div></section>
 
+{DZ.on_this_day(posts, lang)}
+
 {VT.globe_section(lang, trips)}
 
 {latest_section(latest_trip, latest, lang)}
@@ -825,6 +836,7 @@ def page_trip(lang, trip, books):
 <div class="wrap"><a class="crumbs" href="{PATHS[lang]['trips']}">{t['back_trips']}</a>
 <p class="kicker" style="margin-top:18px">{esc(trip['period'][lang])}</p><h1>{esc(trip['title'][lang])}</h1><p>{esc(trip['lead'][lang])}</p>
 <div class="chips"><span class="flag-chip">{trip_flags(trip, 18)}</span><span>{t['modes'][trip['mode']]}</span><span>{n} {t['stories'] if n > 1 else t['story']}</span>{trip_km_chip(trip, lang)}</div></div></section>
+{DZ.trip_frise(trip, lang)}
 {map_sec}
 <section class="section"><div class="wrap"><div class="sec-head"><div><p class="kicker">{t['trip_stories']}</p></div></div>
 <ol class="route" style="--trip:{trip['color']}">{items}{route_next(trip, lang)}</ol></div></section>
@@ -840,6 +852,7 @@ URL_BY_SLUG = {}
 
 def render_body(body, lang="fr", trip=None):
     t = T[lang]
+    body = DZ.mosaic(body)
 
     def fix_link(m):
         url = m.group(2)
@@ -866,13 +879,15 @@ def page_post(p, lang="fr"):
     v = V(p, lang)
     trip = p.get("trip")
     mins = max(1, round(v["words"] / 230))
-    fl = post_flags(p, 16)
+    fl = "".join(f'<a href="{DZ.country_url(c, lang)}" title="{esc(VT.COUNTRY_NAMES[c][0 if lang == "fr" else 1])}">{flags_html([c], 16)}</a>'
+                 for c in VT.countries_of(p))
     chips = (f'<span class="flag-chip">{fl}</span>' if fl else "") + f"<span>{esc(fdate(p['dt'], lang))}</span><span>{mins} {t['read_min']}</span>"
     crumbs = ""
     aside = ""
     nav = ""
     prev_html = ""
-    rbody, route = VT.route_body(p, render_body(v['body'], lang, trip=trip), lang) if trip else (render_body(v['body'], lang, trip=trip), "")
+    dbody = DZ.day_ids(p, render_body(v['body'], lang, trip=trip), lang)[0]
+    rbody, route = VT.route_body(p, dbody, lang) if trip else (dbody, "")
     rbody = VT.lq_body(rbody)
     if trip:
         tp = trip["posts"]
@@ -932,7 +947,7 @@ def page_post(p, lang="fr"):
         scripts = f'<script type="application/json" id="rt-data">{safe}</script>\n<script src="/assets/js/route.js?v={VERSION}" defer></script>'
     body = f"""{top}<section class="wrap post-head">{crumbs}<h1>{esc(v['title'])}</h1><div class="meta">{chips}</div></section>
 {cover}
-<div class="wrap post-wrap">{aside}<article class="prose">{prev_html}{rbody}{tracks_section(p, trip, lang) if trip else ""}{nav}</article></div>"""
+<div class="wrap post-wrap"{f' style="--trip:{trip["color"]}"' if trip else ""}>{aside}<article class="prose">{prev_html}{rbody}{tracks_section(p, trip, lang) if trip else ""}{nav}</article></div>"""
     if lang == "fr":
         alt = p["en"]["url"] if p.get("en") else (trip_url(trip, "en") if trip else PATHS["en"]["home"])
     else:
@@ -1086,6 +1101,7 @@ def main():
         a["next_trip"] = b
     for p in posts:
         URL_BY_SLUG[p["url"].rstrip("/").split("/")[-1]] = p
+    DZ.collect_days(posts)
     for lang in ("fr", "en"):
         page_home(lang, posts, trips, books)
         page_trips(lang, trips)
@@ -1113,6 +1129,7 @@ def main():
     for lang in ("fr", "en"):
         VT.search_index(posts, lang)
         VT.page_passport(lang, posts)
+        DZ.pages_countries(posts, lang)
     redirect("/labs/", "/")
     redirect("/voyages/echappees-a-velo-en-france/", "/voyages/")  # voyage scindé en trois
     redirect("/en/journeys/cycling-getaways-in-france/", "/en/journeys/")

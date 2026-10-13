@@ -531,9 +531,45 @@
   }
 
   if (reduce || !("IntersectionObserver" in window)) return;
-  var targets = article.querySelectorAll(":scope > img, :scope > figure, :scope > .gallery, :scope > video, :scope > h3, :scope > h4, :scope > blockquote, :scope > .strava-card, :scope > .trk, .trk-list > .trk, :scope > .tracks");
+  var targets = article.querySelectorAll(":scope > img, :scope > figure, :scope > .gallery, :scope > .mosaic > .mz, :scope > video, :scope > h3, :scope > h4, :scope > blockquote, :scope > .strava-card, :scope > .trk, .trk-list > .trk, :scope > .tracks");
   var io = new IntersectionObserver(function (es) {
     es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
   }, { rootMargin: "0px 0px -10% 0px" });
   Array.prototype.forEach.call(targets, function (t) { t.classList.add("rv"); io.observe(t); });
+})();
+
+
+/* « Ce jour-là » : un récit écrit à la même date, une autre année */
+(function () {
+  var el = document.getElementById("otd-data");
+  if (!el) return;
+  var D;
+  try { D = JSON.parse(el.textContent); } catch (e) { return; }
+  var now = new Date(), y = now.getFullYear();
+  function doy(m, d) { return Math.round((Date.UTC(2001, m - 1, d) - Date.UTC(2001, 0, 1)) / 864e5); }
+  var today = doy(now.getMonth() + 1, now.getDate());
+  var best = [], bestGap = 99;
+  D.rows.forEach(function (r) {
+    var ry = +r.d.slice(0, 4);
+    if (ry >= y) return;
+    var g = Math.abs(doy(+r.d.slice(5, 7), +r.d.slice(8, 10)) - today);
+    g = Math.min(g, 365 - g);
+    if (g > 4) return;
+    if (g < bestGap) { bestGap = g; best = [r]; } else if (g === bestGap) best.push(r);
+  });
+  if (!best.length) return;
+  var r = best[(now.getDate() + now.getMonth() * 31) % best.length];
+  var n = y - +r.d.slice(0, 4);
+  var when = bestGap === 0 ? (n === 1 ? D.t.years[0] : D.t.years[1].replace("{n}", n)) : D.t.near.replace("{n}", n);
+  var dt = new Date(r.d + "T12:00:00");
+  var nice = dt.toLocaleDateString(D.lang === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "long", year: "numeric" });
+  var sec = el.parentNode, a = sec.querySelector(".otd-card");
+  a.href = r.u;
+  a.style.setProperty("--k", r.k);
+  if (r.c) sec.querySelector(".otd-img").style.backgroundImage = "url('" + r.c + "')";
+  sec.querySelector(".otd-when").textContent = when + " · " + nice + (r.v ? " · " + r.v : "");
+  sec.querySelector(".otd-title").textContent = r.t;
+  sec.querySelector(".otd-ex").textContent = r.e;
+  sec.querySelector(".otd-go").textContent = D.t.read;
+  sec.hidden = false;
 })();
