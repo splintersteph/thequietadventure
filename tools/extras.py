@@ -286,26 +286,51 @@ def leg_lines(t):
     return out
 
 
+def _chapters(trips):
+    """Découpe un voyage quand un autre commence pendant qu'il dure (Bali au milieu de l'Australie,
+    Kyushu au milieu de la Corée), pour que le globe déroule tout dans l'ordre chronologique."""
+    out = []
+    for t in trips:
+        cuts = sorted(o["start"] for o in trips if o is not t and t["start"] < o["start"] < t["end"])
+        segs = trip_segments(t, warn=False)
+        bounds = [None] + cuts + [None]
+        for i in range(len(bounds) - 1):
+            lo, hi = bounds[i], bounds[i + 1]
+            ps = [p for p in t["posts"] if (lo is None or p["dt"] >= lo) and (hi is None or p["dt"] < hi)]
+            sg = [x for x in segs if (lo is None or x["d"] >= lo.date().isoformat()) and (hi is None or x["d"] < hi.date().isoformat())]
+            if not ps and not sg:
+                continue
+            start = min([p["dt"] for p in ps] or [lo or t["start"]])
+            out.append({"trip": t, "posts": ps, "segs": sg, "start": start, "part": i})
+    for c in out:
+        c["n_parts"] = sum(1 for x in out if x["trip"] is c["trip"])
+    return sorted(out, key=lambda c: c["start"])
+
+
 def globe_data(trips, lang):
-    chrono = sorted(trips, key=lambda t: t["start"])
+    for t in trips:
+        trip_segments(t, warn=lang == "fr")
     seen_c, n_posts, km_self, out = set(), 0, 0.0, []
-    for t in chrono:
-        segs = trip_segments(t, warn=lang == "fr")
+    for ch in _chapters(trips):
+        t, segs = ch["trip"], ch["segs"]
         by_mode = {}
         for sg in segs:
             by_mode[sg["m"]] = by_mode.get(sg["m"], 0) + sg["km"]
             if sg["m"] in ("velo", "pied"):
                 km_self += sg["km"]
-        for p in t["posts"]:
+        for p in ch["posts"]:
             seen_c.update(countries_of(p))
-        n_posts += len(t["posts"])
+        n_posts += len(ch["posts"])
+        title = t["title"][lang]
+        if ch["part"] > 0 and ch["n_parts"] > 1:
+            title += " (suite)" if lang == "fr" else " (continued)"
         out.append({
-            "slug": t["slug"], "title": t["title"][lang], "period": t["period"][lang], "color": t["color"],
-            "mode": t.get("mode", "roadtrip"), "url": B.trip_url(t, lang), "year": t["start"].year,
+            "slug": t["slug"], "title": title, "period": t["period"][lang], "color": t["color"],
+            "mode": t.get("mode", "roadtrip"), "url": B.trip_url(t, lang), "year": ch["start"].year,
             "flags": trip_flags(t, 18),
             "segs": [{"m": sg["m"], "c": [[round(p[1], 3), round(p[0], 3)] for p in sg["pts"]]} for sg in segs],
             "modes": {k: round(v) for k, v in by_mode.items()},
-            "pins": [[round(p["geo"][1], 3), round(p["geo"][0], 3)] for p in t["posts"] if p.get("geo")],
+            "pins": [[round(p["geo"][1], 3), round(p["geo"][0], 3)] for p in ch["posts"] if p.get("geo")],
             "km": round(km_self), "countries": len(seen_c), "stories": n_posts,
         })
     return out
