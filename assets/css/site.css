@@ -471,7 +471,7 @@ a:hover { color: var(--forest-deep); }
 .post-head .meta .km-chip svg { flex: none; }
 
 .trk { margin: 34px 0; list-style: none; }
-.trk > a { display: grid; grid-template-columns: 132px 1fr; gap: 0; background: var(--card); box-shadow: var(--shadow); text-decoration: none; color: var(--ink); border-left: 4px solid var(--trip, var(--forest)); transition: transform .35s ease, box-shadow .35s ease; }
+.trk > a, .trk > .trk-static { display: grid; grid-template-columns: 132px 1fr; gap: 0; background: var(--card); box-shadow: var(--shadow); text-decoration: none; color: var(--ink); border-left: 4px solid var(--trip, var(--forest)); transition: transform .35s ease, box-shadow .35s ease; }
 .trk > a:hover { color: var(--ink); transform: translateY(-3px) rotate(-.3deg); box-shadow: 0 1px 0 #E2D7C3, 0 18px 34px rgba(60, 45, 30, .14); }
 .trk-svg { width: 132px; height: 100%; min-height: 96px; display: block; background-color: var(--paper-deep);
   background-image: radial-gradient(rgba(74, 67, 60, .16) 1px, transparent 1.2px); background-size: 9px 9px; }

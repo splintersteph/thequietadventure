@@ -267,6 +267,9 @@ def decode_polyline(s):
 def _load_strava():
     path = os.path.join(ROOT, "data", "strava", "activities.json")
     acts = {a["id"]: a for a in json.load(open(path, encoding="utf-8"))} if os.path.exists(path) else {}
+    manual = os.path.join(ROOT, "data", "strava", "manual.json")  # traces redessinées, sans activité Strava
+    if os.path.exists(manual):
+        acts.update({a["id"]: a for a in json.load(open(manual, encoding="utf-8"))["activities"]})
     mp = os.path.join(ROOT, "data", "strava", "posts.json")
     mapping = json.load(open(mp, encoding="utf-8")) if os.path.exists(mp) else {}
     return acts, mapping.get("posts", {}), mapping.get("trips", {})
@@ -357,11 +360,13 @@ def act_card(a, color, lang="fr", tag="div"):
     if a["time"]:
         bits.append(fdur(a["time"]))
     name = a["name"].replace("->", "→").replace("➡️", "→").replace("➡", "→")
+    inner = (f'{mini_trace(a, color)}<span class="trk-txt"><span class="trk-kind">{t["trk_" + kind]} · {esc(fdate(d, lang))}</span>'
+             f'<span class="trk-name">{esc(name)}</span><span class="trk-stats">{" · ".join(bits)}</span>')
+    if a.get("manual"):  # trace redessinée : pas de page Strava
+        return f'<{tag} class="trk" style="--trip:{color}"><div class="trk-static">{inner}</span></div></{tag}>'
     return (f'<{tag} class="trk" style="--trip:{color}">'
             f'<a href="https://www.strava.com/activities/{a["id"]}" rel="noopener" aria-label="{esc(name)} ({t["strava_go"].rstrip(" →")})">'
-            f'{mini_trace(a, color)}<span class="trk-txt"><span class="trk-kind">{t["trk_" + kind]} · {esc(fdate(d, lang))}</span>'
-            f'<span class="trk-name">{esc(name)}</span><span class="trk-stats">{" · ".join(bits)}</span>'
-            f'<span class="trk-go">{t["strava_go"]}</span></span></a></{tag}>')
+            f'{inner}<span class="trk-go">{t["strava_go"]}</span></span></a></{tag}>')
 
 
 def tracks_section(p, trip, lang="fr"):

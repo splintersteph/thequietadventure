@@ -1,6 +1,11 @@
 {
  "_doc": "Traces Strava rattachées aux récits qui n'en contiennent pas déjà (slug du récit -> identifiants d'activités). 'trips' : traces en plus pour la carte d'un voyage.",
  "posts": {
+  "weekend-ensoleille-en-provence-lappel-de-laventure": [
+   "manuel-provence-1",
+   "manuel-provence-2",
+   "manuel-provence-3"
+  ],
   "de-marseille-a-lyon-ou-comment-faire-toutes-les-erreurs-de-debutants-possibles": [
    "12854408558",
    "12854410800",

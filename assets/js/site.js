@@ -391,8 +391,10 @@
           var line = L.polyline(pts, {
             color: tr.color, weight: on ? 5 : (hasHl ? 2.5 : 3.2), opacity: on ? 1 : (hasHl ? .45 : .9), lineCap: "round", lineJoin: "round"
           }).addTo(map);
-          line.bindTooltip("Strava ↗", { sticky: true, direction: "top" });
-          line.on("click", function () { window.open("https://www.strava.com/activities/" + it[0], "_blank", "noopener"); });
+          if (/^\d+$/.test(String(it[0]))) {  // traces redessinées : pas de lien Strava
+            line.bindTooltip("Strava ↗", { sticky: true, direction: "top" });
+            line.on("click", function () { window.open("https://www.strava.com/activities/" + it[0], "_blank", "noopener"); });
+          }
           if (on) { line.bringToFront(); drawn.push(line); pts.forEach(function (p) { hlBounds.push(p); }); }
           pts.forEach(function (p) { bounds.push(p); });
         });

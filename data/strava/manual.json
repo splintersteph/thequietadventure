@@ -1,0 +1,41 @@
+{
+ "_doc": "Traces redessinées à la main pour les récits sans activité Strava (même format que activities.json, avec \"manual\": true).",
+ "activities": [
+  {
+   "id": "manuel-provence-1",
+   "date": "2023-04-08T10:00:00",
+   "type": "Ride",
+   "name": "Avignon → Saint-Rémy-de-Provence",
+   "place": "Provence",
+   "dist": 37955,
+   "elev": 0,
+   "time": 0,
+   "poly": "olekGoti\\zh@l`@r`BwAjpA|LjpAtOdd@}s@|LsrAjAsrAfHq`BsJonBfVsrAnm@srAxv@onBdk@udAby@{ZvdAkGvdAi|@jiAgjA~EfjA~Evv@jiApDvdAjGnt@jGrJ`tBrCjjCgOffDsQtdAsCjn@",
+   "manual": true
+  },
+  {
+   "id": "manuel-provence-2",
+   "date": "2023-04-09T09:30:00",
+   "type": "Ride",
+   "name": "Saint-Rémy-de-Provence → Beaucaire → Pont du Gard",
+   "place": "Provence",
+   "dist": 39595,
+   "elev": 0,
+   "time": 0,
+   "poly": "_ufjGswo\\gVdq@rCtdA{ZrrAkAhxCrQjjCzZrrAfd@tdAzZtdAq_@nnB}Sp`Bck@p`B{o@tdA{Zfc@ot@h|@{Zxh@{h@zZkiAfc@of@nRsQxh@gOh|@ot@fc@ot@xh@wv@l`@ot@dq@wdAl`@kpA|LgsBjG_|A|Lc`Axh@gOxh@fVl`@",
+   "manual": true
+  },
+  {
+   "id": "manuel-provence-3",
+   "date": "2023-04-10T09:30:00",
+   "type": "Ride",
+   "name": "Pont du Gard → Aramon → Avignon",
+   "place": "Provence",
+   "dist": 35600,
+   "elev": 0,
+   "time": 0,
+   "poly": "kofkGqmxZgVm`@fOyh@b`Ayh@~{A}LfsBkGjpA}LvdAm`@nt@eq@nf@m`@gVeq@sQwv@gOi|@sQi|@om@c_AgOq`BhAsrAhAsrAcy@i|@ck@}hBot@srAwdAudAcy@wv@_|Ac_AgVexAgOsrApQsrAxv@eq@",
+   "manual": true
+  }
+ ]
+}
