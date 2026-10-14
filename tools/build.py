@@ -119,7 +119,7 @@ REGIONS = {
     "belle-via-et-vercors": ["france"], "gorges-du-tarn-a-velo": ["france"], "passa-pais": ["france"],
     "toulouse-bordeaux-a-velo": ["france"], "marseille-lyon-a-velo": ["france"], "provence-a-velo": ["france"], "via-allier-a-velo": ["france"],
     "australie": ["oceanie"], "nouvelle-zelande": ["oceanie"],
-    "ouest-americain": ["amerique"], "floride-et-louisiane": ["amerique"], "quebec": ["amerique"], "hiver-a-montreal": ["amerique"], "canada-2020": ["amerique"], "colombie": ["amerique"],
+    "ouest-americain": ["amerique"], "floride-et-louisiane": ["amerique"], "quebec": ["amerique"], "hiver-a-montreal": ["amerique"], "printemps-a-montreal": ["amerique"], "canada-2020": ["amerique"], "colombie": ["amerique"],
     "sri-lanka": ["asie"], "philippines": ["asie"], "montenegro": ["europe"],
 }
 REGION_NAMES = {
@@ -448,6 +448,8 @@ def trip_url(t, lang):
 def img(src, alt, cls="ph", width=1000, extra="", vt=None):
     import extras
     vts = f' style="view-transition-name:{vt}"' if vt else ""
+    if not src:
+        return f'<img class="{cls} noimg" src="/assets/img/placeholder.svg" alt="" loading="lazy" decoding="async"{extra}{vts}>'
     lq = extras.lq_style(src)
     if lq and vts:
         lq = lq.replace(' style="', ' style="view-transition-name:' + vt + ';')

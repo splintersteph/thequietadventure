@@ -200,12 +200,24 @@
     "en_slug": "winter-in-montreal",
     "mode": "expat",
     "title": {"fr": "L'hiver à Montréal", "en": "Winter in Montreal"},
-    "period": {"fr": "Décembre 2019 – février 2020", "en": "December 2019 – February 2020"},
+    "period": {"fr": "Novembre 2019 – mars 2020", "en": "November 2019 – March 2020"},
     "lead": {
-      "fr": "Un premier chalet dans les Laurentides, Noël à New York en gardiens de chiens, l'Igloofest, une vraie tempête de neige, puis Niagara et Toronto.",
-      "en": "A first chalet weekend in the Laurentians, Christmas in New York as dog-sitters, Igloofest, a real snowstorm, then Niagara and Toronto."
+      "fr": "Les premières neiges, un chalet dans les Laurentides, Noël à New York en gardiens de chiens, l'Igloofest, une vraie tempête, Niagara et Toronto, puis le monde qui se ferme.",
+      "en": "First snow, a chalet weekend in the Laurentians, Christmas in New York as dog-sitters, Igloofest, a real snowstorm, Niagara and Toronto, then the world closing down."
     },
-    "match": {"categories": ["canada", "usa"], "from": "2019-12-01", "to": "2020-02-29"}
+    "match": {"categories": ["canada", "usa"], "from": "2019-11-01", "to": "2020-03-31"}
+  },
+  {
+    "slug": "printemps-a-montreal",
+    "en_slug": "spring-in-montreal",
+    "mode": "expat",
+    "title": {"fr": "Montréal, du confinement à l'été", "en": "Montreal, from lockdown to summer"},
+    "period": {"fr": "Avril – juillet 2020", "en": "April – July 2020"},
+    "lead": {
+      "fr": "Un printemps qui ne vient pas, la chasse à la voiture, les parcs comme seuls bistrots, une répétition générale aux Mille-Îles et le jour du Déménagement.",
+      "en": "A spring that never comes, the hunt for a car, parks as the only bars, a dress rehearsal in the Thousand Islands and Moving Day."
+    },
+    "match": {"categories": ["canada"], "from": "2020-04-01", "to": "2020-07-11"}
   },
   {
     "slug": "ouest-americain",
@@ -250,8 +262,8 @@
     "title": {"fr": "Été canadien : Ontario et Rocheuses", "en": "Canadian summer: Ontario and the Rockies"},
     "period": {"fr": "Juillet – septembre 2020", "en": "July – September 2020"},
     "lead": {
-      "fr": "Ottawa, les plages de l'Ontario et l'île Manitoulin, puis Banff, le glacier Bow et l'Iceline Trail dans les Rocheuses.",
-      "en": "Ottawa, Ontario's beaches and Manitoulin Island, then Banff, Bow Glacier and the Iceline Trail in the Rockies."
+      "fr": "Ottawa, Algonquin, la péninsule de Bruce, le lac Supérieur, Winnipeg et les Prairies, puis Banff, Jasper et l'Iceline Trail dans les Rocheuses.",
+      "en": "Ottawa, Algonquin, the Bruce Peninsula, Lake Superior, Winnipeg and the Prairies, then Banff, Jasper and the Iceline Trail in the Rockies."
     },
     "match": {"categories": ["canada"], "from": "2020-01-01"}
   },
