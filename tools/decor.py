@@ -63,6 +63,7 @@ DECOR = {
     "floride-et-louisiane": ("sun", "heat", {"fr": "FLORIDE · LOUISIANE", "en": "FLORIDA · LOUISIANA"}),
     "ouest-americain": ("cactus", "heat", {"fr": "ÉTATS-UNIS", "en": "UNITED STATES"}),
     "japon-2018": ("torii", "petals", {"fr": "JAPON", "en": "JAPAN"}),
+    "hiver-a-montreal": ("pine", "snow", {"fr": "MONTRÉAL", "en": "MONTREAL"}),
     "quebec": ("maple", "maple", {"fr": "QUÉBEC", "en": "QUÉBEC"}),
     "canada-2020": ("pine", "leaves", {"fr": "CANADA", "en": "CANADA"}),
     "colombie": ("coffee", "butterflies", {"fr": "COLOMBIE", "en": "COLOMBIA"}),
@@ -153,7 +154,7 @@ TRIP_FLAGS = {
     "coree-a-velo": ["kr"], "kyushu-a-velo": ["jp"], "retour-en-europe-a-velo": ["hr", "si", "it"],
     "suisse-en-train": ["ch"], "belle-via-et-vercors": ["fr"], "gorges-du-tarn-a-velo": ["fr"], "passa-pais": ["fr"],
     "toulouse-bordeaux-a-velo": ["fr"], "marseille-lyon-a-velo": ["fr"], "provence-a-velo": ["fr"], "via-allier-a-velo": ["fr"], "australie": ["au"], "bali": ["id"],
-    "nouvelle-zelande": ["nz"], "ouest-americain": ["us"], "floride-et-louisiane": ["us"], "japon-2018": ["jp"], "quebec": ["ca"], "canada-2020": ["ca"],
+    "nouvelle-zelande": ["nz"], "ouest-americain": ["us"], "floride-et-louisiane": ["us"], "japon-2018": ["jp"], "quebec": ["ca"], "hiver-a-montreal": ["ca", "us"], "canada-2020": ["ca"],
     "colombie": ["co"], "sri-lanka": ["lk"], "philippines": ["ph"], "montenegro": ["me"],
 }
 CAT_FLAGS = {

@@ -119,7 +119,7 @@ REGIONS = {
     "belle-via-et-vercors": ["france"], "gorges-du-tarn-a-velo": ["france"], "passa-pais": ["france"],
     "toulouse-bordeaux-a-velo": ["france"], "marseille-lyon-a-velo": ["france"], "provence-a-velo": ["france"], "via-allier-a-velo": ["france"],
     "australie": ["oceanie"], "nouvelle-zelande": ["oceanie"],
-    "ouest-americain": ["amerique"], "floride-et-louisiane": ["amerique"], "quebec": ["amerique"], "canada-2020": ["amerique"], "colombie": ["amerique"],
+    "ouest-americain": ["amerique"], "floride-et-louisiane": ["amerique"], "quebec": ["amerique"], "hiver-a-montreal": ["amerique"], "canada-2020": ["amerique"], "colombie": ["amerique"],
     "sri-lanka": ["asie"], "philippines": ["asie"], "montenegro": ["europe"],
 }
 REGION_NAMES = {

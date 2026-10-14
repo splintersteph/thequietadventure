@@ -196,6 +196,18 @@
     "match": {"categories": ["usa"], "from": "2019-03-01", "to": "2019-03-13"}
   },
   {
+    "slug": "hiver-a-montreal",
+    "en_slug": "winter-in-montreal",
+    "mode": "expat",
+    "title": {"fr": "L'hiver à Montréal", "en": "Winter in Montreal"},
+    "period": {"fr": "Décembre 2019 – février 2020", "en": "December 2019 – February 2020"},
+    "lead": {
+      "fr": "Un premier chalet dans les Laurentides, Noël à New York en gardiens de chiens, l'Igloofest, une vraie tempête de neige, puis Niagara et Toronto.",
+      "en": "A first chalet weekend in the Laurentians, Christmas in New York as dog-sitters, Igloofest, a real snowstorm, then Niagara and Toronto."
+    },
+    "match": {"categories": ["canada", "usa"], "from": "2019-12-01", "to": "2020-02-29"}
+  },
+  {
     "slug": "ouest-americain",
     "en_slug": "american-west",
     "mode": "roadtrip",
